@@ -1,0 +1,120 @@
+/* Smart Multilingual — Woodmart compatibility
+ * Loaded only when Woodmart (or a Woodmart child theme) is active.
+ * The source-language/LTR design remains untouched. */
+
+html[dir="rtl"] body.sml-site-woodmart.sml-dir-rtl {
+	direction: rtl !important;
+}
+
+/* Woodmart content roots. Direction is inherited; individual centered blocks
+ * keep their own text-align from Elementor/Woodmart. */
+html[dir="rtl"] body.sml-site-woodmart.sml-dir-rtl :is(
+	.main-page-wrapper,
+	.site-content,
+	.wd-content-layout,
+	.wd-page-content,
+	.entry-content,
+	.woocommerce,
+	.woocommerce-page,
+	.wd-builder-off,
+	.elementor
+) {
+	direction: rtl;
+}
+
+/* Elementor render classes are attached by SML on Woodmart automatically.
+ * Explicit center alignment is tagged .sml-preserve-center and excluded. */
+html[dir="rtl"] body.sml-site-woodmart .sml-elementor-rtl {
+	direction: rtl !important;
+}
+
+html[dir="rtl"] body.sml-site-woodmart .sml-rtl-text-widget:not(.sml-preserve-center),
+html[dir="rtl"] body.sml-site-woodmart .sml-rtl-text-widget:not(.sml-preserve-center) > .elementor-widget-container,
+html[dir="rtl"] body.sml-site-woodmart .sml-rtl-text-widget:not(.sml-preserve-center) :is(
+	.elementor-heading-title,
+	.elementor-text-editor,
+	.elementor-button-wrapper,
+	.elementor-button-text,
+	.elementor-icon-list-text,
+	.elementor-image-box-content,
+	.elementor-icon-box-content,
+	.elementor-tab-content,
+	.elementor-tab-title,
+	.elementor-toggle-content,
+	.elementor-toggle-title,
+	.elementor-post__text,
+	.elementor-post__title,
+	.elementor-post__excerpt
+) {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+html[dir="rtl"] body.sml-site-woodmart .sml-preserve-center,
+html[dir="rtl"] body.sml-site-woodmart .sml-preserve-center > .elementor-widget-container,
+html[dir="rtl"] body.sml-site-woodmart .sml-preserve-center :is(.elementor-heading-title,.elementor-button-wrapper,.elementor-button-text,.elementor-icon-list-text,.elementor-image-box-content,.elementor-icon-box-content) {
+	text-align: center !important;
+}
+
+/* Native Woodmart text surfaces. */
+html[dir="rtl"] body.sml-site-woodmart.sml-dir-rtl :is(
+	.wd-title,
+	.wd-entities-title,
+	.widget-title,
+	.product_title,
+	.wd-entry-content,
+	.woocommerce-product-details__short-description,
+	.woocommerce-tabs .wc-tab,
+	.wd-checkout-steps,
+	.wd-my-account-sidebar,
+	.wd-my-account-links,
+	.wd-shop-tools,
+	.wd-loop-header,
+	.wd-page-title
+) {
+	direction: rtl !important;
+	text-align: right;
+}
+
+/* Forms/search — keep controls usable and placeholders readable. */
+html[dir="rtl"] body.sml-site-woodmart.sml-dir-rtl :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) {
+	direction: rtl;
+	text-align: right;
+}
+
+html[dir="rtl"] body.sml-site-woodmart.sml-dir-rtl :is(input,textarea)::placeholder {
+	direction: rtl;
+	text-align: right;
+}
+
+/* Breadcrumbs and common inline metadata should start from the right. */
+html[dir="rtl"] body.sml-site-woodmart.sml-dir-rtl :is(
+	.woocommerce-breadcrumb,
+	.breadcrumbs,
+	.yoast-breadcrumb,
+	.wd-breadcrumbs,
+	.entry-meta,
+	.product_meta
+) {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+/* Menus use RTL reading order, while Woodmart keeps its own spacing and
+ * dropdown positioning rules. */
+html[dir="rtl"] body.sml-site-woodmart.sml-dir-rtl :is(
+	.wd-nav,
+	.wd-nav > li > a,
+	.menu,
+	.menu > li > a,
+	.mobile-nav,
+	.wd-dropdown-menu
+) {
+	direction: rtl;
+}
+
+/* Utility opt-outs for custom designs that must stay in their source order. */
+html[dir="rtl"] body.sml-site-woodmart .sml-keep-layout,
+html[dir="rtl"] body.sml-site-woodmart .sml-keep-direction {
+	direction: inherit !important;
+}

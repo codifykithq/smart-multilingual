@@ -1,0 +1,24 @@
+/* Smart Multilingual 1.0 core styles.
+ * Core styles the plugin UI and explicit utility classes only. It never changes
+ * a theme's typography, text alignment, widths, grids, sidebars or menus. */
+.sml-switcher{position:relative;display:inline-flex;align-items:center;font:inherit;color:var(--sml-switcher-color);background:var(--sml-switcher-bg);border:1px solid var(--sml-switcher-border);border-radius:var(--sml-switcher-radius);z-index:50}
+.sml-switcher-toggle{appearance:none;border:0;background:transparent;color:inherit;font:inherit;line-height:1.2;padding:.65em .95em;cursor:pointer}
+.sml-switcher-menu{position:absolute;inset-block-start:100%;inset-inline-start:0;display:none;min-width:max(100%,9rem);padding:.55rem;background:var(--sml-switcher-menu-bg);color:var(--sml-switcher-menu-color);border:1px solid var(--sml-switcher-border);border-radius:var(--sml-switcher-radius);box-shadow:0 14px 38px rgba(15,23,42,.16)}
+.sml-switcher-dropdown:hover .sml-switcher-menu,.sml-switcher-dropdown:focus-within .sml-switcher-menu,.sml-switcher-dropdown.is-open .sml-switcher-menu{display:grid}
+.sml-switcher-item{display:block;padding:.55em .75em;border-radius:calc(var(--sml-switcher-radius) * .7);color:inherit;text-decoration:none;white-space:nowrap}
+.sml-switcher-item:hover,.sml-switcher-item:focus{color:var(--sml-switcher-hover-color);background:var(--sml-switcher-hover-bg)}
+.sml-switcher-item.is-active{font-weight:700}
+.sml-switcher-list{gap:.25rem;padding:.25rem}.sml-switcher-list .sml-switcher-item{color:var(--sml-switcher-color)}
+
+/* Explicit author controls. Nothing below is triggered by direction alone. */
+.sml-rtl-layout{direction:rtl!important}.sml-ltr-layout{direction:ltr!important}
+.sml-rtl-text{text-align:right!important}.sml-ltr-text{text-align:left!important}.sml-center-text{text-align:center!important}
+.sml-mirror-layout{flex-direction:row-reverse!important}.sml-keep-layout{flex-direction:inherit}
+
+@media (prefers-reduced-motion:reduce){.sml-switcher *{transition:none!important}}
+
+/* Click-open state is controlled by assets/js/frontend.js. Keeping the menu flush
+ * with the trigger removes the hover dead-zone that caused visible jumping. */
+.sml-switcher-dropdown{overflow:visible!important}
+.sml-switcher-menu{z-index:99999;pointer-events:auto}
+.sml-switcher-dropdown.is-open .sml-switcher-menu{display:grid}

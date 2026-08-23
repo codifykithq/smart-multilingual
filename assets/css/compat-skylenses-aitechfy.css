@@ -1,0 +1,153 @@
+/* SkyLenses / Aitechfy compatibility layer.
+ * Loaded only on theskylenses.com or a theme whose slug contains "skylens".
+ * It intentionally leaves all other Smart Multilingual installations untouched. */
+
+/* 3 — Persian Hero 3: make the text block truly RTL/right aligned and mirror
+   the previous/next control semantics without touching the English hero. */
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3,
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 .at-hero3-item,
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 .at-hero3-item-wrap,
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 .at-hero3-text {
+	direction: rtl !important;
+}
+
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 .at-hero3-text {
+	text-align: right !important;
+	margin-left: auto !important;
+	margin-right: 0 !important;
+}
+
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 .at-hero3-text :is(.hero3_title, .at-slider-title, .split-line, p) {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 .at-hero2-nav {
+	direction: rtl !important;
+}
+
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 :is(.at-hr2-prev, .at-hr2-next) i {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transform: rotate(180deg) !important;
+}
+
+/* 4 — requested oversized gallery heading. */
+body.sml-site-skylenses .at-gal2-title {
+	font-size: clamp(46px, 5.4vw, 88px) !important;
+	line-height: 1.05 !important;
+}
+
+/* 5 — Persian Why Choose Us background is the horizontal mirror of English. */
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-why-c3 .at-why-c3-bg img,
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa .at-why-c3-sec .at-why-c3-bg img {
+	transform: scaleX(-1) !important;
+	transform-origin: 50% 50% !important;
+}
+
+/* 7 + 12 — keep breadcrumb separators vertically centered and use ic11.svg
+   everywhere this SkyLenses build exposes a separator. */
+body.sml-site-skylenses .breadcrumb-list {
+	display: flex !important;
+	align-items: center !important;
+	flex-wrap: wrap !important;
+	row-gap: .35em !important;
+}
+
+body.sml-site-skylenses .breadcrumb-list > .item {
+	display: inline-flex !important;
+	align-items: center !important;
+	min-height: 1.35em !important;
+}
+
+body.sml-site-skylenses .breadcrumb-list > .item + .item::before {
+	content: none !important;
+	display: none !important;
+}
+
+body.sml-site-skylenses .breadcrumb-list > .item:not(:last-child)::after,
+body.sml-site-skylenses .sml-breadcrumb-separator,
+body.sml-site-skylenses .hfe-breadcrumbs-separator {
+	content: "" !important;
+	display: inline-block !important;
+	flex: 0 0 16px !important;
+	width: 16px !important;
+	height: 16px !important;
+	margin-inline: .6em !important;
+	padding: 0 !important;
+	border: 0 !important;
+	background: url("https://theskylenses.com/wp-content/themes/skylenses/assets/img/ic11.svg") center / contain no-repeat !important;
+	font-size: 0 !important;
+	line-height: 0 !important;
+	vertical-align: middle !important;
+	align-self: center !important;
+	transform: rotate(-90deg) !important;
+	transform-origin: 50% 50% !important;
+}
+
+body.sml-site-skylenses .hfe-breadcrumbs-separator :is(svg, i, img) {
+	display: none !important;
+}
+
+/* 8 + 10 — Aitechfy heading widgets: inner theme classes override Elementor's
+   wrapper direction, so align every visible text layer explicitly. */
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa .elementor-widget-aitechfy-heading.sml-rtl-text-widget,
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa .elementor-widget-aitechfy-heading.sml-rtl-text-widget > .elementor-widget-container,
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa .elementor-widget-aitechfy-heading .at-sec-title3,
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa .elementor-widget-aitechfy-heading .at-sec-title3 :is(.sec_title, h1, h2, h3, p) {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa .elementor-widget-aitechfy-heading .at-sec-title3 .subtitle {
+	direction: rtl !important;
+	text-align: right !important;
+	justify-content: flex-start !important;
+}
+
+/* 9 — the vertical service thumbnail rail belongs on the physical left in FA. */
+html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa .at-ser1-thumb-slider {
+	left: 0 !important;
+	right: auto !important;
+	inset-inline-start: auto !important;
+	inset-inline-end: auto !important;
+	margin-left: 0 !important;
+	margin-right: auto !important;
+}
+
+/* 11 — header/menu wrappers must not clip the dropdown. The generic switcher
+   script controls open/close; these rules only solve the SkyLenses nav context. */
+body.sml-site-skylenses :is(.elementor-location-header, .site-header, .main-navigation, .primary-navigation, .menu-item):has(> .sml-switcher) {
+	overflow: visible !important;
+}
+
+body.sml-site-skylenses .menu-item > a:empty + .sml-switcher {
+	margin-inline: 0 !important;
+}
+
+@media (max-width: 767px) {
+	body.sml-site-skylenses .at-gal2-title {
+		font-size: clamp(36px, 12vw, 54px) !important;
+	}
+
+	html[dir="rtl"] body.sml-site-skylenses.sml-lang-fa #at-hero3 .at-hero3-text {
+		margin-inline: 0 !important;
+	}
+}
+
+body.sml-site-skylenses .sml-switcher-toggle {
+	padding: .68em 1em !important;
+}
+
+body.sml-site-skylenses .sml-switcher-menu {
+	inset-block-start: 100% !important;
+	margin: 0 !important;
+	min-width: 150px !important;
+	padding: 10px !important;
+	z-index: 99999 !important;
+}
+
+body.sml-site-skylenses .sml-switcher-menu .sml-switcher-item {
+	padding: 9px 12px !important;
+}

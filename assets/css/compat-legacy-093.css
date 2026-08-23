@@ -1,0 +1,722 @@
+.sml-rtl {
+	direction: rtl;
+	text-align: right;
+}
+
+/* Elementor RTL layer: classes are added at render time and saved JSON is untouched. */
+.sml-rtl .sml-elementor-rtl {
+	direction: rtl;
+}
+
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center),
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) > .elementor-widget-container,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-heading-title,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-text-editor,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-button-wrapper,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-icon-box-content,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-image-box-content,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-tab-content,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-tab-title,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-toggle-content,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-toggle-title,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-accordion-item,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-post__text,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-post__title,
+.sml-rtl .sml-rtl-text-widget:not(.sml-preserve-center) .elementor-post__excerpt {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+/* Explicit source-language center alignment is a design choice, not an LTR
+   direction that should be mirrored. Keep it centered in RTL languages. */
+.sml-rtl .sml-preserve-center,
+.sml-rtl .sml-preserve-center > .elementor-widget-container,
+.sml-rtl .sml-preserve-center .elementor-heading-title,
+.sml-rtl .sml-preserve-center .elementor-text-editor,
+.sml-rtl .sml-preserve-center .elementor-button-wrapper,
+.sml-rtl .sml-preserve-center .elementor-icon-box-content,
+.sml-rtl .sml-preserve-center .elementor-image-box-content,
+.sml-rtl .sml-preserve-center .elementor-icon-list-items,
+.sml-rtl .sml-keep-center,
+.sml-rtl .sml-keep-center *,
+.sml-rtl .elementor-widget.elementor-align-center,
+.sml-rtl .elementor-widget.elementor-align-center > .elementor-widget-container {
+	text-align: center !important;
+}
+
+.sml-rtl .sml-preserve-center .elementor-icon-list-item,
+.sml-rtl .elementor-widget.elementor-align-center .elementor-icon-list-item {
+	justify-content: center !important;
+}
+
+/* Centered footer widgets must occupy the available row width; otherwise a
+   shrink-to-fit Elementor wrapper can remain visually attached to one side. */
+html[dir="rtl"] body.sml-dir-rtl :is(#colophon, .elementor-location-footer, .hfe-footer, .elementor-hf) :is(.sml-preserve-center, .elementor-widget.elementor-align-center) {
+	width: 100% !important;
+	max-width: 100% !important;
+	align-self: stretch !important;
+	justify-self: stretch !important;
+	text-align: center !important;
+}
+
+html[dir="rtl"] body.sml-dir-rtl :is(#colophon, .elementor-location-footer, .hfe-footer, .elementor-hf) :is(.sml-preserve-center, .elementor-widget.elementor-align-center) :is(.elementor-widget-container, .elementor-heading-title, .elementor-text-editor) {
+	width: 100% !important;
+	text-align: center !important;
+}
+
+/* Common text widgets from third-party Elementor addons. */
+.sml-rtl .elementor-widget-heading:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-text-editor:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-icon-list:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-icon-box:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-image-box:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-button:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-tabs:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-accordion:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-toggle:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-form:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-theme-post-content:not(.sml-preserve-center),
+.sml-rtl .elementor-widget-theme-post-title:not(.sml-preserve-center) {
+	direction: rtl;
+	text-align: right;
+}
+
+.sml-rtl .elementor-widget-heading:not(.sml-preserve-center) .elementor-heading-title,
+.sml-rtl .elementor-widget-text-editor:not(.sml-preserve-center) .elementor-widget-container,
+.sml-rtl .elementor-widget-button:not(.sml-preserve-center) .elementor-button-wrapper,
+.sml-rtl .elementor-widget-icon-box:not(.sml-preserve-center) .elementor-icon-box-content,
+.sml-rtl .elementor-widget-image-box:not(.sml-preserve-center) .elementor-image-box-content {
+	text-align: right !important;
+}
+
+.sml-rtl .elementor-icon-list-items {
+	direction: rtl;
+}
+
+.sml-rtl .elementor-icon-list-item {
+	justify-content: flex-start;
+	text-align: right;
+}
+
+.sml-rtl .elementor-icon-list-icon + .elementor-icon-list-text {
+	padding-inline-start: .45em;
+	padding-inline-end: 0;
+}
+
+.sml-rtl .sml-rtl-icon-widget .elementor-button-content-wrapper,
+.sml-rtl .sml-rtl-icon-widget .elementor-icon-box-wrapper,
+.sml-rtl .sml-rtl-icon-widget .elementor-image-box-wrapper {
+	direction: rtl;
+}
+
+/* Optional automatic row reversal, controlled from plugin settings. */
+.sml-rtl .sml-rtl-row-reverse:not(.sml-keep-direction) {
+	flex-direction: row-reverse !important;
+}
+
+.sml-rtl input:not([type="email"]):not([type="tel"]):not([type="url"]),
+.sml-rtl textarea,
+.sml-rtl select {
+	direction: rtl;
+	text-align: right;
+}
+
+.sml-rtl input[type="email"],
+.sml-rtl input[type="tel"],
+.sml-rtl input[type="url"],
+.sml-rtl .sml-ltr,
+.sml-rtl .sml-ltr * {
+	direction: ltr !important;
+	text-align: left !important;
+}
+
+/* Keep visual components, sliders and explicitly marked sections in their original direction. */
+.sml-rtl .sml-keep-direction,
+.sml-rtl .sml-keep-direction * {
+	direction: ltr;
+}
+
+.sml-rtl .sml-keep-direction {
+	text-align: initial;
+}
+
+.sml-rtl .sml-keep-direction.sml-rtl-row-reverse,
+.sml-rtl .sml-keep-direction .sml-rtl-row-reverse {
+	flex-direction: revert !important;
+}
+
+.sml-switcher {
+	box-sizing: border-box;
+	color: inherit;
+	min-height: 1em;
+	min-width: 2em;
+	opacity: 1;
+	visibility: visible;
+	align-items: center;
+	display: inline-flex;
+	justify-content: center;
+	line-height: 1;
+	text-decoration: none;
+}
+
+.sml-rtl .woocommerce-error,
+.sml-rtl .woocommerce-info,
+.sml-rtl .woocommerce-message {
+	padding-inline-start: 3.5em;
+	padding-inline-end: 2em;
+}
+
+.sml-rtl .woocommerce-error::before,
+.sml-rtl .woocommerce-info::before,
+.sml-rtl .woocommerce-message::before {
+	inset-inline-start: 1.5em;
+	inset-inline-end: auto;
+}
+
+.sml-switcher-dropdown{position:relative;display:inline-block}.sml-switcher-toggle{cursor:pointer;background:transparent;border:0;padding:.5em .7em}.sml-switcher-menu{display:none;position:absolute;z-index:9999;min-width:140px;background:#fff;border:1px solid #ddd;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px}.sml-switcher-dropdown:hover .sml-switcher-menu,.sml-switcher-dropdown:focus-within .sml-switcher-menu{display:grid}.sml-switcher-item{display:block;padding:.55em .7em;text-decoration:none;white-space:nowrap}.sml-switcher-item.is-active{font-weight:700}.sml-switcher-list{display:inline-flex;gap:.7em;flex-wrap:wrap}
+
+/* 0.6.3: switcher visibility across Elementor/theme headers. */
+.sml-switcher-dropdown{display:inline-block!important;position:relative!important;overflow:visible!important;vertical-align:middle}
+.sml-switcher-toggle{display:inline-flex!important;align-items:center;justify-content:center;min-width:2.5em;min-height:2em;color:inherit!important;visibility:visible!important;opacity:1!important}
+.sml-switcher-menu{inset-inline-start:0;inset-inline-end:auto}
+.sml-switcher-item.is-fallback{opacity:.72}
+.elementor-widget-shortcode .sml-switcher,.elementor-widget-sml-language-switcher .sml-switcher{display:inline-flex!important;visibility:visible!important;opacity:1!important}
+
+/* 0.6.4 — configurable switcher appearance */
+.sml-switcher-toggle,
+.sml-switcher-list .sml-switcher-item{
+	color:var(--sml-switcher-color)!important;
+	background:var(--sml-switcher-bg)!important;
+	border:1px solid var(--sml-switcher-border)!important;
+	border-radius:var(--sml-switcher-radius)!important;
+}
+.sml-switcher-toggle:hover,
+.sml-switcher-toggle:focus,
+.sml-switcher-list .sml-switcher-item:hover,
+.sml-switcher-list .sml-switcher-item:focus{
+	color:var(--sml-switcher-hover-color)!important;
+	background:var(--sml-switcher-hover-bg)!important;
+}
+.sml-switcher-menu{color:var(--sml-switcher-menu-color)!important;background:var(--sml-switcher-menu-bg)!important;border-color:var(--sml-switcher-border)!important;border-radius:var(--sml-switcher-radius)!important}
+.sml-switcher-menu .sml-switcher-item{color:var(--sml-switcher-menu-color)!important;background:transparent!important;border:0!important}
+.sml-switcher-menu .sml-switcher-item:hover{color:var(--sml-switcher-hover-color)!important;background:var(--sml-switcher-hover-bg)!important}
+
+/* Antra and common WordPress header RTL compatibility. */
+.sml-rtl .main-navigation > div > ul > li.menu-item-has-children > a,
+.sml-rtl .main-navigation ul.menu > li.menu-item-has-children > a,
+.sml-rtl .site-header .menu > li.menu-item-has-children > a{
+	display:inline-flex!important;align-items:center!important;gap:8px!important;
+}
+.sml-rtl .main-navigation > div > ul > li.menu-item-has-children > a::after,
+.sml-rtl .main-navigation ul.menu > li.menu-item-has-children > a::after,
+.sml-rtl .site-header .menu > li.menu-item-has-children > a::after{
+	margin-inline-start:0!important;margin-inline-end:0!important;position:static!important;
+}
+.sml-rtl .main-navigation > div > ul > li.menu-item-has-children > .sub-menu,
+.sml-rtl .main-navigation ul.menu > li.menu-item-has-children > .sub-menu,
+.sml-rtl .site-header .menu > li.menu-item-has-children > .sub-menu{
+	left:50%!important;right:auto!important;transform:translateX(-50%)!important;text-align:right!important;
+}
+.sml-rtl .site-header .header-actions,
+.sml-rtl .site-header .header-icons,
+.sml-rtl .site-header .header-group-action,
+.sml-rtl .site-header .elementor-widget-wrap,
+.sml-rtl .site-header .e-con-inner{
+	column-gap:12px;
+}
+
+/* Antra, HFE and Elementor top-level menu alignment in LTR languages.
+   The theme can render its down arrow with ::before, which places it before
+   the label, and can anchor the submenu to the item's left edge. */
+@media (min-width: 769px) {
+html[dir="ltr"] body.sml-dir-ltr .main-navigation > div > ul > li.menu-item-has-children,
+html[dir="ltr"] body.sml-dir-ltr .main-navigation ul.menu > li.menu-item-has-children,
+html[dir="ltr"] body.sml-dir-ltr .site-header .menu > li.menu-item-has-children,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .menu > li.menu-item-has-children,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .elementor-nav-menu > li.menu-item-has-children,
+html[dir="ltr"] body.sml-dir-ltr .hfe-nav-menu > li.menu-item-has-children {
+	position: relative !important;
+}
+
+html[dir="ltr"] body.sml-dir-ltr .main-navigation > div > ul > li.menu-item-has-children > a,
+html[dir="ltr"] body.sml-dir-ltr .main-navigation ul.menu > li.menu-item-has-children > a,
+html[dir="ltr"] body.sml-dir-ltr .site-header .menu > li.menu-item-has-children > a,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .menu > li.menu-item-has-children > a,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .elementor-nav-menu > li.menu-item-has-children > a,
+html[dir="ltr"] body.sml-dir-ltr .hfe-nav-menu > li.menu-item-has-children > a {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	column-gap: 9px !important;
+	direction: ltr !important;
+}
+
+html[dir="ltr"] body.sml-dir-ltr .main-navigation > div > ul > li.menu-item-has-children > a::before,
+html[dir="ltr"] body.sml-dir-ltr .main-navigation > div > ul > li.menu-item-has-children > a::after,
+html[dir="ltr"] body.sml-dir-ltr .main-navigation ul.menu > li.menu-item-has-children > a::before,
+html[dir="ltr"] body.sml-dir-ltr .main-navigation ul.menu > li.menu-item-has-children > a::after,
+html[dir="ltr"] body.sml-dir-ltr .site-header .menu > li.menu-item-has-children > a::before,
+html[dir="ltr"] body.sml-dir-ltr .site-header .menu > li.menu-item-has-children > a::after,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .menu > li.menu-item-has-children > a::before,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .menu > li.menu-item-has-children > a::after,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .elementor-nav-menu > li.menu-item-has-children > a::before,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .elementor-nav-menu > li.menu-item-has-children > a::after,
+html[dir="ltr"] body.sml-dir-ltr .hfe-nav-menu > li.menu-item-has-children > a::before,
+html[dir="ltr"] body.sml-dir-ltr .hfe-nav-menu > li.menu-item-has-children > a::after {
+	order: 2 !important;
+	position: static !important;
+	top: auto !important;
+	left: auto !important;
+	right: auto !important;
+	margin: 0 !important;
+	flex: 0 0 auto !important;
+}
+
+html[dir="ltr"] body.sml-dir-ltr .menu > li.menu-item-has-children > a > :is(.sub-arrow, .dropdown-toggle, .menu-toggle, .caret),
+html[dir="ltr"] body.sml-dir-ltr .elementor-nav-menu > li.menu-item-has-children > a > :is(.sub-arrow, .dropdown-toggle, .menu-toggle, .caret),
+html[dir="ltr"] body.sml-dir-ltr .hfe-nav-menu > li.menu-item-has-children > a > :is(.sub-arrow, .dropdown-toggle, .menu-toggle, .caret) {
+	order: 2 !important;
+	margin-inline-start: 0 !important;
+	margin-inline-end: 0 !important;
+}
+
+html[dir="ltr"] body.sml-dir-ltr .main-navigation > div > ul > li.menu-item-has-children > .sub-menu,
+html[dir="ltr"] body.sml-dir-ltr .main-navigation ul.menu > li.menu-item-has-children > .sub-menu,
+html[dir="ltr"] body.sml-dir-ltr .site-header .menu > li.menu-item-has-children > .sub-menu,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .menu > li.menu-item-has-children > .sub-menu,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-header .elementor-nav-menu > li.menu-item-has-children > .sub-menu,
+html[dir="ltr"] body.sml-dir-ltr .hfe-nav-menu > li.menu-item-has-children > .sub-menu {
+	left: 50% !important;
+	right: auto !important;
+	inset-inline-start: 50% !important;
+	inset-inline-end: auto !important;
+	transform: translateX(-50%) !important;
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+}
+}
+
+/* Single post header/meta alignment. */
+body.sml-rtl.single-post .entry-header,
+body.sml-rtl.single-post .entry-header .entry-title,
+body.sml-rtl.single-post .entry-meta-top{
+	text-align:right!important;
+}
+body.sml-rtl.single-post .entry-meta-top{
+	direction:rtl!important;justify-content:flex-start!important;align-items:center!important;gap:8px!important;
+}
+body.sml-rtl.single-post .entry-meta-top > *{margin:0!important}
+
+/* Sidebar direction and search placement. Typography is opt-in in settings. */
+body.sml-rtl #secondary,
+body.sml-rtl #secondary .widget,
+body.sml-rtl #secondary .widget-title,
+body.sml-rtl #secondary h2,
+body.sml-rtl #secondary h3,
+body.sml-rtl #secondary li,
+body.sml-rtl #secondary a{
+	direction:rtl!important;text-align:right!important;
+}
+body.sml-rtl #secondary .search-form{
+	direction:rtl!important;
+	position:relative!important;
+	display:block!important;
+	width:100%!important;
+}
+body.sml-rtl #secondary .search-form label{
+	display:block!important;
+	width:100%!important;
+	margin:0!important;
+}
+body.sml-rtl #secondary .search-field{
+	box-sizing:border-box!important;
+	display:block!important;
+	width:100%!important;
+	min-width:0!important;
+	padding-inline-start:16px!important;
+	padding-inline-end:52px!important;
+	text-align:right!important;
+}
+body.sml-rtl #secondary .search-submit,
+body.sml-rtl #secondary .search-form button[type="submit"]{
+	position:absolute!important;
+	top:50%!important;
+	left:10px!important;
+	right:auto!important;
+	inset-inline-start:auto!important;
+	inset-inline-end:10px!important;
+	dis:inline-flex!important;
+	align-items:center!important;
+	justify-content:center!important;
+	width:36px!important;
+	height:36px!important;
+	margin:0!important;
+	padding:0!important;
+	transform:translateY(-50%)!important;
+	z-index:2!important;
+}
+
+/* 0.7.0 — stronger single-post RTL compatibility. */
+html[dir="rtl"] body.sml-rtl.single-post .single-content > .entry-header,
+html[dir="rtl"] body.sml-rtl.single-post .single-content > .entry-header .entry-title,
+html[dir="rtl"] body.sml-rtl.single-post .single-content > .entry-header .entry-meta-top{
+	width:100%!important;
+	text-align:right!important;
+}
+html[dir="rtl"] body.sml-rtl.single-post .single-content > .entry-header .entry-meta-top{
+	direction:rtl!important;
+	display:flex!important;
+	justify-content:flex-start!important;
+	align-items:center!important;
+	flex-wrap:wrap!important;
+	gap:8px!important;
+}
+html[dir="rtl"] body.sml-rtl .woocommerce-breadcrumb,
+html[dir="rtl"] body.sml-rtl .woocommerce-breadcrumb *,
+html[dir="rtl"] body.sml-rtl .sv-breadcrumb-moved,
+html[dir="rtl"] body.sml-rtl .sv-breadcrumb-moved *{
+	direction:rtl!important;
+	text-align:right!important;
+}
+
+/* Keep recent-post thumbnails separated from text in RTL sidebars. */
+html[dir="rtl"] body.sml-rtl #secondary .widget_recent_entries li,
+html[dir="rtl"] body.sml-rtl #secondary .recent-posts-info,
+html[dir="rtl"] body.sml-rtl #secondary .recent-posts-thumbnail{
+	box-sizing:border-box;
+}
+html[dir="rtl"] body.sml-rtl #secondary .widget_recent_entries li{
+	display:flex!important;
+	flex-direction:row!important;
+	align-items:flex-start!important;
+	gap:14px!important;
+}
+html[dir="rtl"] body.sml-rtl #secondary .recent-posts-thumbnail{
+	flex:0 0 auto!important;
+	margin:0!important;
+}
+html[dir="rtl"] body.sml-rtl #secondary .recent-posts-info{
+	min-width:0!important;
+	flex:1 1 auto!important;
+	margin:0!important;
+}
+
+/* Search icon belongs on the visual left in RTL while text stays right aligned. */
+html[dir="rtl"] body.sml-rtl #secondary .search-form .search-submit,
+html[dir="rtl"] body.sml-rtl #secondary .search-form button[type="submit"]{
+	left:10px!important;
+	right:auto!important;
+	inset-inline-start:auto!important;
+	inset-inline-end:10px!important;
+}
+
+/* 0.7.1 — explicit language layout controls. */
+html[dir="ltr"] body.sml-lang-en {
+	direction: ltr !important;
+	text-align: left;
+}
+html[dir="ltr"] body.sml-lang-en .sml-ltr-layout,
+html[dir="ltr"] body.sml-lang-en .sml-keep-layout {
+	direction: ltr !important;
+}
+
+/* Keep the original column/grid order while allowing translated text to follow RTL. */
+html[dir="rtl"] body.sml-rtl .sml-keep-layout {
+	direction: rtl !important;
+}
+html[dir="rtl"] body.sml-rtl .sml-keep-layout.sml-rtl-row-reverse,
+html[dir="rtl"] body.sml-rtl .sml-keep-layout .sml-rtl-row-reverse {
+	flex-direction: revert !important;
+}
+
+/* Mirror only layouts explicitly marked for mirroring. */
+html[dir="rtl"] body.sml-rtl .sml-mirror-layout {
+	flex-direction: row-reverse !important;
+}
+
+.sml-ltr-layout,
+.sml-ltr-layout * {
+	direction: ltr !important;
+}
+.sml-ltr-layout { text-align: left !important; }
+.sml-rtl-layout,
+.sml-rtl-layout * {
+	direction: rtl !important;
+}
+.sml-rtl-layout { text-align: right !important; }
+
+/* Utility elements for language-specific Elementor sections. */
+.sml-language-inline { display: inline !important; }
+.sml-language-inline-block { display: inline-block !important; }
+
+/* 0.7.2 — language visibility and editor safety. */
+body.sml-elementor-editing .sml-only-en,
+body.sml-elementor-editing .sml-only-fa,
+body.sml-elementor-editing .sml-only-tr,
+body.sml-elementor-editing .sml-only-ar,
+body.sml-elementor-editing .sml-only-de,
+body.sml-elementor-editing [class*="sml-only-"],
+body.sml-elementor-editing [class*="sml-except-"] {
+	display: revert;
+}
+
+/* Sidebar placement: use physical grid columns so theme sticky scripts cannot
+   recalculate an RTL sidebar onto the visual right while scrolling. */
+@media (min-width: 769px) {
+	html[dir="rtl"] body.sml-dir-rtl #content > .col-full:has(> #secondary) {
+		display: grid !important;
+		grid-template-columns: minmax(250px, 28%) minmax(0, 1fr) !important;
+		column-gap: clamp(48px, 4.5vw, 80px) !important;
+		align-items: flex-start !important;
+		direction: ltr !important;
+		overflow: visible !important;
+	}
+
+	html[dir="rtl"] body.sml-dir-rtl #content > .col-full:has(> #secondary) > .woocommerce {
+		grid-column: 1 / -1 !important;
+		width: 100% !important;
+	}
+
+	html[dir="rtl"] body.sml-dir-rtl #content > .col-full:has(> #secondary) > #primary {
+		grid-column: 2 !important;
+		grid-row: 1 !important;
+		float: none !important;
+		width: auto !important;
+		max-width: none !important;
+		min-width: 0 !important;
+		margin: 0 !important;
+		direction: rtl !important;
+	}
+
+	html[dir="rtl"] body.sml-dir-rtl #content > .col-full:has(> #secondary) > #secondary {
+		grid-column: 1 !important;
+		grid-row: 1 !important;
+		float: none !important;
+		width: auto !important;
+		max-width: none !important;
+		min-width: 0 !important;
+		margin: 0 !important;
+		direction: rtl !important;
+		align-self: start !important;
+		position: sticky !important;
+		top: 32px !important;
+		left: auto !important;
+		right: auto !important;
+		inset-inline: auto !important;
+		transform: none !important;
+	}
+
+	/* Neutralize common JS sticky wrappers. The parent #secondary now provides
+	   native sticky behavior inside its fixed left grid column. */
+	html[dir="rtl"] body.sml-dir-rtl #secondary > .theiaStickySidebar,
+	html[dir="rtl"] body.sml-dir-rtl #secondary > .sidebar-inner,
+	html[dir="rtl"] body.sml-dir-rtl #secondary > .sidebar__inner,
+	html[dir="rtl"] body.sml-dir-rtl #secondary > .sticky-sidebar,
+	html[dir="rtl"] body.sml-dir-rtl #secondary .inner-wrapper-sticky {
+		position: static !important;
+		top: auto !important;
+		bottom: auto !important;
+		left: auto !important;
+		right: auto !important;
+		inset: auto !important;
+		transform: none !important;
+		width: auto !important;
+		max-width: none !important;
+	}
+
+	body.admin-bar.sml-dir-rtl #content > .col-full:has(> #secondary) > #secondary {
+		top: 64px !important;
+	}
+}
+
+/* 0.8.3 — translated WooCommerce single-product compatibility.
+   Every selector is limited to the Persian single-product view so the prior
+   header, footer, blog, sidebar and Slider Revolution corrections keep their
+   established behavior. */
+html[dir="rtl"] body.sml-lang-fa.single-product #content > .col-full,
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-location-single,
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-location-single > .elementor-element,
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-18518ac,
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-18518ac > .e-con-inner {
+	box-sizing: border-box !important;
+	width: 100% !important;
+	min-width: 0 !important;
+}
+
+/* The product template's two primary columns need breathing room in RTL. */
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-02a8a61 {
+	column-gap: clamp(28px, 4vw, 72px) !important;
+	row-gap: 28px !important;
+	align-items: flex-start !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product :is(.elementor-element-5021838, .elementor-element-0bd52b8, .elementor-element-e59522a),
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-e59522a :is(.woocommerce-product-gallery, .woocommerce-product-gallery__wrapper, .woocommerce-product-gallery__image, .woocommerce-product-gallery__image a) {
+	box-sizing: border-box !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-e59522a .woocommerce-product-gallery__image img {
+	display: block !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	height: auto !important;
+	margin: 0 !important;
+}
+
+/* HFE renders the home icon and its label as separate siblings. */
+html[dir="rtl"] body.sml-lang-fa.single-product .hfe-breadcrumbs-first {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: .5em !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product .hfe-breadcrumbs-home-icon {
+	display: inline-flex !important;
+	align-items: center !important;
+	margin: 0 !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-location-single :is(.woocommerce-product-details__short-description, .elementor-widget-text-editor, .elementor-heading-title) {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+/* Technical Information is two flex columns rather than a semantic table.
+   Keep labels on the visual right and values on the visual left. */
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-cd88b49 {
+	direction: ltr !important;
+	flex-direction: row-reverse !important;
+	column-gap: clamp(20px, 3vw, 56px) !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-73e0a63 {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-8e9c379 {
+	direction: ltr !important;
+	text-align: left !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-73e0a63 .elementor-heading-title {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-8e9c379 .elementor-heading-title {
+	direction: ltr !important;
+	text-align: left !important;
+}
+
+@media (max-width: 767px) {
+	html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-cd88b49 {
+		column-gap: 14px !important;
+	}
+}
+
+/* Do not let a cached RTL document direction leak into LTR languages. */
+html[dir="ltr"] body.sml-dir-ltr,
+html[dir="ltr"] body.sml-dir-ltr #content,
+html[dir="ltr"] body.sml-dir-ltr #colophon,
+html[dir="ltr"] body.sml-dir-ltr .elementor-location-footer {
+	direction: ltr !important;
+}
+
+/* 0.8.6 — Coating archive and desktop Antra header corrections.
+   These selectors intentionally use the supplied HFE widget, Loop template
+   and Antra navigation structure so unrelated Elementor layouts keep their
+   established sizing and order. */
+
+/* HFE renders its home glyph and label as separate siblings. The earlier
+   product-only rule did not cover translated Elementor pages such as Coating. */
+html[dir="rtl"] body.sml-lang-fa .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-first {
+	display: inline-flex !important;
+	align-items: center !important;
+	column-gap: .5em !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-home-icon,
+html[dir="rtl"] body.sml-lang-fa .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-first > a {
+	display: inline-flex !important;
+	align-items: center !important;
+	margin: 0 !important;
+}
+
+/* The loop template contains a broad custom 18px anchor rule while SML's
+   language heading tokens also size the surrounding h2. Override both layers
+   only inside this product-card template. */
+body.sml-language-ready .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title,
+body.sml-language-ready .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title > a,
+body.sml-language-ready .elementor[data-elementor-id="9740"] .elementor-element-29d9972 .elementor-heading-title,
+body.sml-language-ready .elementor[data-elementor-id="9740"] .elementor-element-29d9972 .elementor-heading-title > a {
+	font-size: 15px !important;
+	line-height: 1.55 !important;
+}
+
+html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-1969601,
+html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title,
+html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title > a {
+	direction: rtl !important;
+	text-align: right !important;
+}
+
+/* Font Awesome's source path already points right. Neutralize theme-level RTL
+   SVG mirroring without moving the icon box to the other side of the card. */
+html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-7d912d9 .e-fas-arrow-right {
+	transform: none !important;
+}
+
+/* The saved Loop template has inherited dir=rtl attributes even on English
+   output. Explicit item order makes the title the left item and the icon box
+   the right item, matching the source-language design. */
+html[dir="ltr"] body.sml-lang-en .elementor[data-elementor-id="9890"] .elementor-element-6280bbd {
+	direction: ltr !important;
+	flex-direction: row !important;
+	--flex-direction: row !important;
+	justify-content: space-between !important;
+	--justify-content: space-between !important;
+}
+
+html[dir="ltr"] body.sml-lang-en .elementor[data-elementor-id="9890"] .elementor-element-1969601 {
+	order: 1 !important;
+	flex: 1 1 auto !important;
+	width: auto !important;
+	max-width: none !important;
+	direction: ltr !important;
+	text-align: left !important;
+}
+
+html[dir="ltr"] body.sml-lang-en .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title,
+html[dir="ltr"] body.sml-lang-en .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title > a {
+	direction: ltr !important;
+	text-align: left !important;
+}
+
+html[dir="ltr"] body.sml-lang-en .elementor[data-elementor-id="9890"] .elementor-element-7d912d9 {
+	order: 2 !important;
+	flex: 0 0 auto !important;
+}
+
+/* The Antra menu inherits an RTL container from the shared header template.
+   Make the actual Products li a shrink-to-content positioning context before
+   centering its submenu; otherwise the box is centred on the stretched slot. */
+@media (min-width: 769px) {
+	html[dir="ltr"] body.sml-lang-en .elementor-widget-antra-nav-menu .main-navigation .primary-navigation > ul.menu > li.menu-item-has-children {
+		position: relative !important;
+		flex: 0 0 auto !important;
+		width: max-content !important;
+		direction: ltr !important;
+	}
+
+	html[dir="ltr"] body.sml-lang-en .elementor-widget-antra-nav-menu .main-navigation .primary-navigation > ul.menu > li.menu-item-has-children > .sub-menu {
+		left: 50% !important;
+		right: auto !important;
+		inset-inline-start: 50% !important;
+		inset-inline-end: auto !important;
+		margin-inline: 0 !important;
+		transform: translateX(-50%) !important;
+	}
+}

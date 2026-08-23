@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# WordPress
+wp-config.php
+wp-content/uploads/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+
+# Node
+node_modules/

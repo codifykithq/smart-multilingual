@@ -1,0 +1,6 @@
+/* Optional Elementor RTL profile. */
+html[dir="rtl"] .sml-elementor-rtl{direction:rtl!important}
+html[dir="rtl"] .sml-rtl-text-widget:not(.sml-preserve-center),html[dir="rtl"] .sml-rtl-text-widget:not(.sml-preserve-center) :is(.elementor-heading-title,.elementor-widget-container,.elementor-button-text,.elementor-icon-list-text,.elementor-image-box-content,.elementor-icon-box-content){text-align:right!important}
+html[dir="rtl"] .sml-preserve-center,html[dir="rtl"] .sml-preserve-center :is(.elementor-heading-title,.elementor-widget-container,.elementor-button-text,.elementor-icon-list-text,.elementor-image-box-content,.elementor-icon-box-content){text-align:center!important}
+html[dir="rtl"] .sml-rtl-row-reverse{flex-direction:row-reverse!important}
+html[dir="rtl"] .sml-rtl-icon-widget .elementor-button-content-wrapper,html[dir="rtl"] .sml-rtl-icon-widget .elementor-icon-list-item{direction:rtl}
