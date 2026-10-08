@@ -10,7 +10,7 @@ final class SML_Theme_Compat {
 	}
 
 	private function __construct() {
-		if ( SML_Compatibility::enabled( 'content_queries' ) || SML_Plugin::is_skylenses_site() ) {
+		if ( SML_Compatibility::enabled( 'content_queries' ) ) {
 			add_filter( 'widget_posts_args', array( $this, 'filter_recent_posts_args' ) );
 			add_filter( 'widget_categories_args', array( $this, 'filter_category_widget_args' ) );
 			add_filter( 'widget_categories_dropdown_args', array( $this, 'filter_category_widget_args' ) );
@@ -25,14 +25,22 @@ final class SML_Theme_Compat {
 			add_filter( 'get_next_post_where', array( $this, 'filter_adjacent_post_where' ), 20, 5 );
 			add_action( 'pre_get_posts', array( $this, 'filter_secondary_post_queries' ), 35 );
 		}
-		add_filter( 'get_the_date', array( $this, 'persian_post_date' ), 9999, 3 );
-		add_filter( 'get_the_modified_date', array( $this, 'persian_post_date' ), 9999, 3 );
-		add_filter( 'get_the_time', array( $this, 'persian_post_time' ), 9999, 3 );
 
 		// Elementor Header & Footer Builder / Ultimate Addons compatibility.
 		// The builder may return an arbitrary template when multiple templates use
 		// the same display conditions. Resolve the matching language template here.
 		if ( SML_Compatibility::enabled( 'hfe_templates' ) ) {
+			/* Elementor Pro Theme Builder resolves cached header/footer template IDs
+			 * through this filter before loading the document. Map the source template
+			 * to its translation for the current public language. */
+			add_filter( 'elementor/theme/get_location_templates/template_id', array( $this, 'filter_elementor_theme_builder_template_id' ), 999, 2 );
+			/*
+			 * HFE/UAE versions do not all expose the same final template-ID filter.
+			 * Filter the underlying elementor-hf query as well, so the builder only
+			 * sees templates belonging to the public request language. This makes
+			 * /en/, /tr/, etc. deterministic even when legacy ID filters are skipped.
+			 */
+			add_action( 'pre_get_posts', array( $this, 'filter_hfe_template_query' ), 5 );
 			add_filter( 'hfe_get_settings_type_header', array( $this, 'filter_hfe_header_id' ), 999 );
 			add_filter( 'hfe_get_settings_type_footer', array( $this, 'filter_hfe_footer_id' ), 999 );
 			add_filter( 'hfe_get_settings_type_before_footer', array( $this, 'filter_hfe_before_footer_id' ), 999 );
@@ -107,12 +115,6 @@ final class SML_Theme_Compat {
 		if ( SML_Languages::is_default( $lang ) ) return $link_html;
 		$new_url = $this->localize_date_archive_url( $url );
 		$new_text = $text;
-		if ( 'fa' === $lang && $this->parsi_date_available() ) {
-			$parts = wp_parse_url( $url );
-			if ( ! empty( $parts['path'] ) && preg_match( '#/(\d{4})/(\d{1,2})/?$#', $parts['path'], $m ) ) {
-				$new_text = $this->parsi_date( 'F Y', mktime( 0, 0, 0, (int) $m[2], 1, (int) $m[1] ) );
-			}
-		}
 		return $before . '<a href="' . esc_url( $new_url ) . '">' . esc_html( $new_text ) . '</a>' . $after;
 	}
 
@@ -168,6 +170,150 @@ final class SML_Theme_Compat {
 		$plugin->apply_strict_language_filter( $query, $plugin->current_language() );
 	}
 
+
+
+	/**
+	 * Restrict Elementor Header & Footer Builder template discovery to the
+	 * current frontend language before HFE chooses the winning template.
+	 *
+	 * This intentionally targets only the elementor-hf post type and leaves all
+	 * normal page/post/product queries untouched. For the source language,
+	 * legacy HFE templates with no SML language meta are still accepted.
+	 *
+	 * @param WP_Query $query Query being prepared.
+	 * @return void
+	 */
+	public function filter_hfe_template_query( $query ) {
+		if ( is_admin() || ! $query instanceof WP_Query || $query->get( '_sml_hfe_language_filtered' ) ) {
+			return;
+		}
+
+		$post_type = $query->get( 'post_type' );
+		$post_types = is_array( $post_type ) ? $post_type : array( $post_type );
+		if ( ! in_array( 'elementor-hf', $post_types, true ) ) {
+			return;
+		}
+
+		$current_lang = SML_Plugin::instance()->current_language();
+		if ( ! $current_lang || ! SML_Languages::is_enabled( $current_lang ) ) {
+			return;
+		}
+
+		$meta_query = $query->get( 'meta_query' );
+		$meta_query = is_array( $meta_query ) ? $meta_query : array();
+		$default     = SML_Languages::default_code();
+
+		if ( $current_lang === $default ) {
+			$meta_query[] = array(
+				'relation' => 'OR',
+				array(
+					'key'   => SML_Plugin::META_LANG,
+					'value' => $default,
+				),
+				array(
+					'key'     => SML_Plugin::META_LANG,
+					'compare' => 'NOT EXISTS',
+				),
+			);
+		} else {
+			$meta_query[] = array(
+				'key'   => SML_Plugin::META_LANG,
+				'value' => $current_lang,
+			);
+		}
+
+		$query->set( 'meta_query', $meta_query );
+		$query->set( '_sml_hfe_language_filtered', 1 );
+	}
+
+
+	/**
+	 * Map Elementor Pro Theme Builder header/footer IDs to the translation that
+	 * belongs to the current language. Elementor Pro's conditions cache can keep
+	 * the source template ID; this filter is intentionally the final translation
+	 * layer before Elementor creates the Theme_Document.
+	 *
+	 * It also repairs older SML clones that Elementor saved as template type
+	 * "page" instead of inheriting "header" / "footer" from the source.
+	 */
+	public function filter_elementor_theme_builder_template_id( $template_id, $location ) {
+		if ( is_admin() && empty( $_GET['elementor-preview'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return $template_id;
+		}
+
+		$source_id = absint( $template_id );
+		if ( ! $source_id || ! in_array( $location, array( 'header', 'footer' ), true ) ) {
+			return $template_id;
+		}
+
+		$current_lang = SML_Plugin::instance()->current_language();
+		if ( ! $current_lang || ! SML_Languages::is_enabled( $current_lang ) ) {
+			return $template_id;
+		}
+
+		$group = get_post_meta( $source_id, SML_Plugin::META_GROUP, true );
+		if ( ! $group ) {
+			return $template_id;
+		}
+
+		/* Do not use SML_Plugin::get_group_translations() here. That generic
+		 * helper queries post_type=any, while Elementor Theme Builder templates
+		 * live in elementor_library and may be excluded from an `any` query.
+		 * Resolve the translated Theme Builder document explicitly by its actual
+		 * post type + translation group + target language. */
+		$target_ids = get_posts( array(
+			'post_type'              => get_post_type( $source_id ) ?: 'elementor_library',
+			'post_status'            => array( 'publish', 'draft', 'pending', 'private', 'future' ),
+			'posts_per_page'         => 1,
+			'fields'                 => 'ids',
+			'no_found_rows'          => true,
+			'ignore_sticky_posts'    => true,
+			'suppress_filters'       => true,
+			'meta_query'             => array(
+				'relation' => 'AND',
+				array(
+					'key'   => SML_Plugin::META_GROUP,
+					'value' => sanitize_text_field( $group ),
+				),
+				array(
+					'key'   => SML_Plugin::META_LANG,
+					'value' => sanitize_key( $current_lang ),
+				),
+			),
+		) );
+
+		$target_id = ! empty( $target_ids[0] ) ? absint( $target_ids[0] ) : 0;
+		if ( ! $target_id || 'publish' !== get_post_status( $target_id ) ) {
+			return $template_id;
+		}
+
+		/* Keep Elementor's document type aligned with the original Theme Builder
+		 * template. Older translations created by SML could become "page" after
+		 * opening/saving in Elementor, which makes them invisible to header/footer
+		 * rendering even though their translation relationship is correct. */
+		$source_type = get_post_meta( $source_id, '_elementor_template_type', true );
+		$expected_type = in_array( $source_type, array( 'header', 'footer' ), true ) ? $source_type : $location;
+		$target_type = get_post_meta( $target_id, '_elementor_template_type', true );
+		if ( $expected_type && $target_type !== $expected_type ) {
+			delete_post_meta( $target_id, '_elementor_template_type' );
+			update_post_meta( $target_id, '_elementor_template_type', $expected_type );
+			wp_cache_delete( $target_id, 'post_meta' );
+			clean_post_cache( $target_id );
+		}
+
+		/* Conditions are evaluated from Elementor's cached source entry, but keeping
+		 * the target metadata synchronized makes future cache regeneration safe. */
+		$source_conditions = get_post_meta( $source_id, '_elementor_conditions', true );
+		if ( ! empty( $source_conditions ) ) {
+			$target_conditions = get_post_meta( $target_id, '_elementor_conditions', true );
+			if ( $target_conditions !== $source_conditions ) {
+				delete_post_meta( $target_id, '_elementor_conditions' );
+				update_post_meta( $target_id, '_elementor_conditions', $source_conditions );
+			}
+		}
+
+		return $target_id;
+	}
 
 	public function filter_hfe_header_id( $template_id ) {
 		return $this->resolve_hfe_template_id( $template_id, 'type_header' );
@@ -265,37 +411,5 @@ final class SML_Theme_Compat {
 		}
 
 		return $template_id;
-	}
-
-	private function parsi_date_available() {
-		$settings = SML_Plugin::settings();
-		return SML_Compatibility::enabled( 'persian_dates' ) && ! empty( $settings['use_persian_dates'] ) && function_exists( 'parsidate' );
-	}
-
-	private function parsi_date( $format, $timestamp ) {
-		if ( ! $this->parsi_date_available() ) return '';
-		return (string) parsidate( $format, $timestamp, 'per' );
-	}
-
-	private function persian_digits( $value ) {
-		return strtr( (string) $value, array( '0'=>'۰','1'=>'۱','2'=>'۲','3'=>'۳','4'=>'۴','5'=>'۵','6'=>'۶','7'=>'۷','8'=>'۸','9'=>'۹' ) );
-	}
-
-	private function formatted_persian_date( $timestamp ) {
-		$parts = explode( '|', $this->parsi_date( 'j|F|Y', $timestamp ) );
-		if ( 3 !== count( $parts ) ) return $this->parsi_date( 'j F Y', $timestamp );
-		return $this->persian_digits( $parts[0] ) . ' ' . $parts[1] . ' ' . $this->persian_digits( $parts[2] );
-	}
-
-	public function persian_post_date( $date, $format, $post ) {
-		if ( 'fa' !== SML_Plugin::instance()->current_language() || ! $this->parsi_date_available() || ! $post ) return $date;
-		$timestamp = get_post_timestamp( $post );
-		return $timestamp ? $this->formatted_persian_date( $timestamp ) : $date;
-	}
-
-	public function persian_post_time( $time, $format, $post ) {
-		if ( 'fa' !== SML_Plugin::instance()->current_language() || ! $this->parsi_date_available() || ! $post ) return $time;
-		$timestamp = get_post_timestamp( $post );
-		return $timestamp ? $this->parsi_date( $format ?: get_option( 'time_format' ), $timestamp ) : $time;
 	}
 }

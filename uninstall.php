@@ -40,4 +40,7 @@ delete_metadata( 'term', 0, '_sml_source_path', '', true );
 
 // Per-language media metadata.
 global $wpdb;
-$wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE '_sml_media_%'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared
+$media_meta_like = $wpdb->esc_like( '_sml_media_' ) . '%';
+$wpdb->query(
+	$wpdb->prepare( "DELETE FROM {$wpdb->postmeta} WHERE meta_key LIKE %s", $media_meta_like ) // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery

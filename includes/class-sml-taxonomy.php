@@ -69,8 +69,50 @@ final class SML_Taxonomy {
 		$source=get_term($term_id,$taxonomy);if(!$source||is_wp_error($source))wp_die(esc_html__('Source term was not found.','smart-multilingual'));
 		$source_lang=get_term_meta($term_id,self::META_LANG,true)?:SML_Languages::default_code();$group=get_term_meta($term_id,self::META_GROUP,true)?:wp_generate_uuid4();update_term_meta($term_id,self::META_GROUP,$group);update_term_meta($term_id,self::META_LANG,$source_lang);$existing=$this->get_group_translations($group,$taxonomy);if(!empty($existing[$target])){wp_safe_redirect(get_edit_term_link($existing[$target],$taxonomy));exit;}
 		$parent=0;if($source->parent){$pg=get_term_meta($source->parent,self::META_GROUP,true);$pl=$pg?$this->get_group_translations($pg,$taxonomy):array();$parent=!empty($pl[$target])?(int)$pl[$target]:0;}$cfg=SML_Languages::get($target);
-		$created=wp_insert_term($source->name.' — '.$cfg['native'],$taxonomy,array('slug'=>$source->slug.'-'.$target,'description'=>$source->description,'parent'=>$parent));if(is_wp_error($created))wp_die(esc_html($created->get_error_message()));$new=(int)$created['term_id'];update_term_meta($new,self::META_GROUP,$group);update_term_meta($new,self::META_LANG,$target);
+		$translation_slug=$this->translation_term_slug($source,$target,$existing,$taxonomy);
+		$created=wp_insert_term($source->name.' — '.$cfg['native'],$taxonomy,array('slug'=>$translation_slug,'description'=>$source->description,'parent'=>$parent));if(is_wp_error($created))wp_die(esc_html($created->get_error_message()));$new=(int)$created['term_id'];update_term_meta($new,self::META_GROUP,$group);update_term_meta($new,self::META_LANG,$target);
 		$default=SML_Languages::default_code();$source_term=!empty($existing[$default])?get_term((int)$existing[$default],$taxonomy):$source;update_term_meta($new,self::META_SOURCE_PATH,SML_Plugin::relative_url_path(get_term_link($source_term)));wp_safe_redirect(add_query_arg(array('sml_created'=>'1','sml_language'=>$target),get_edit_term_link($new,$taxonomy)));exit;
+	}
+
+
+	/** Build a translated term slug from the configured target language Code. */
+	private function translation_term_slug( $source, $target_lang, $existing, $taxonomy ) {
+		$target_lang = sanitize_key( $target_lang );
+		$default     = SML_Languages::default_code();
+		$base_term   = $source;
+
+		if ( ! empty( $existing[ $default ] ) ) {
+			$default_term = get_term( (int) $existing[ $default ], $taxonomy );
+			if ( $default_term && ! is_wp_error( $default_term ) ) {
+				$base_term = $default_term;
+			}
+		}
+
+		$base_slug = sanitize_title( (string) $base_term->slug );
+		if ( '' === $base_slug ) {
+			$base_slug = sanitize_title( (string) $base_term->name );
+		}
+
+		$base_lang = get_term_meta( $base_term->term_id, self::META_LANG, true );
+		$base_lang = $base_lang ? sanitize_key( $base_lang ) : $default;
+		if ( $base_lang !== $default ) {
+			$base_code = $this->slug_language_code( $base_lang );
+			$suffix    = '-' . $base_code;
+			if ( $base_code && substr( $base_slug, -strlen( $suffix ) ) === $suffix ) {
+				$base_slug = rtrim( substr( $base_slug, 0, -strlen( $suffix ) ), '-' );
+			}
+		}
+
+		if ( $target_lang === $default ) {
+			return $base_slug;
+		}
+
+		return sanitize_title( $base_slug . '-' . $this->slug_language_code( $target_lang ) );
+	}
+
+	private function slug_language_code( $language ) {
+		$language = sanitize_key( $language );
+		return trim( sanitize_title( str_replace( '_', '-', $language ) ), '-' );
 	}
 
 	public function get_group_translations( $group, $taxonomy ) {
@@ -110,7 +152,10 @@ final class SML_Taxonomy {
 				}
 			}
 		}
-		return SML_Plugin::language_url( get_term_meta( $term->term_id, self::META_LANG, true ), $path );
+		if ( ! $path ) {
+			$path = SML_Plugin::relative_url_path( $url );
+		}
+		return $path ? SML_Plugin::language_url( get_term_meta( $term->term_id, self::META_LANG, true ), $path ) : $url;
 	}
 
 
@@ -132,7 +177,10 @@ final class SML_Taxonomy {
 		$this->query_term    = $source;
 		$this->resolved_term = $this->get_translation_term( $source, $language );
 		if ( ! $this->resolved_term instanceof WP_Term ) {
-			$this->resolved_term = $source;
+			/* Do not serve a source-language taxonomy archive at a translated URL.
+			 * The caller will turn this unresolved route into a genuine 404. */
+			$this->query_term = null;
+			return false;
 		}
 
 		// Rewrite rules already populated the native taxonomy query variable.
@@ -244,22 +292,27 @@ final class SML_Taxonomy {
 
 
 	public function seo_links() {
-		if ( ! is_tax() && ! is_category() && ! is_tag() ) {
+		if ( is_404() || ( ! is_tax() && ! is_category() && ! is_tag() ) ) {
 			return;
 		}
 		$term = get_queried_object();
-		if ( ! $term instanceof WP_Term ) {
-			return;
-		}
+		if ( ! $term instanceof WP_Term ) return;
+
 		$group = get_term_meta( $term->term_id, self::META_GROUP, true );
 		$links = $group ? $this->get_group_translations( $group, $term->taxonomy ) : array();
 		foreach ( SML_Languages::enabled() as $lang ) {
-			if ( empty( $links[ $lang ] ) ) {
-				continue;
-			}
+			if ( empty( $links[ $lang ] ) ) continue;
 			$link = get_term_link( (int) $links[ $lang ], $term->taxonomy );
+			if ( is_wp_error( $link ) ) continue;
+			$cfg = SML_Languages::get( $lang );
+			printf( '<link rel="alternate" hreflang="%1$s" href="%2$s" />' . "\n", esc_attr( $cfg['hreflang'] ), esc_url( $link ) );
+		}
+
+		$default = SML_Languages::default_code();
+		if ( ! empty( $links[ $default ] ) ) {
+			$link = get_term_link( (int) $links[ $default ], $term->taxonomy );
 			if ( ! is_wp_error( $link ) ) {
-				printf( '<link rel="alternate" hreflang="%1$s" href="%2$s" />' . "\n", SML_Languages::get( $lang )['hreflang'], esc_url( $link ) );
+				printf( '<link rel="alternate" hreflang="x-default" href="%s" />' . "\n", esc_url( $link ) );
 			}
 		}
 	}

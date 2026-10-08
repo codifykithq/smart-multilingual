@@ -13,8 +13,18 @@ final class SML_Strings {
 	}
 
 	private function __construct() {
-		add_action( 'admin_menu', array( $this, 'admin_menu' ), 20 );
-		add_action( 'admin_init', array( $this, 'register_setting' ) );
+		/*
+		 * wp-admin is not a translation target for frontend String Translation.
+		 * Keep only the configuration page/settings there. In particular, never
+		 * register gettext/gettext_with_context filters in the dashboard: WordPress
+		 * uses a contextual `ltr`/`rtl` translation while constructing WP_Locale.
+		 */
+		if ( is_admin() && ! wp_doing_ajax() ) {
+			add_action( 'admin_menu', array( $this, 'admin_menu' ), 20 );
+			add_action( 'admin_init', array( $this, 'register_setting' ) );
+			return;
+		}
+
 		add_filter( 'gettext', array( $this, 'translate_string' ), 20, 3 );
 		add_filter( 'gettext_with_context', array( $this, 'translate_context_string' ), 20, 4 );
 		add_filter( 'widget_title', array( $this, 'translate_plain_string' ), 20 );
@@ -82,14 +92,12 @@ final class SML_Strings {
 
 	private function effective_text_map( $lang ) {
 		if ( SML_Languages::is_default( $lang ) || SML_Plugin::instance()->current_language() !== $lang ) return array();
-		return array_replace( $this->map( $lang ), $this->language_only_map( $lang ) );
+		/* Built-ins are the lowest priority; administrator-defined translations still win. */
+		return array_replace( $this->builtin_map( $lang ), $this->map( $lang ), $this->language_only_map( $lang ) );
 	}
-
-	/**
-	 * Safe frontend labels supplied by WooCommerce/Elementor product templates.
-	 * These defaults are language-scoped and user-defined rules always win.
-	 */
-	private function builtin_map( $lang ) { return array(); }
+	private function builtin_map( $lang ) {
+		return array();
+	}
 
 	private function attribute_map( $lang ) {
 		if ( isset( $this->attribute_maps[ $lang ] ) ) return $this->attribute_maps[ $lang ];
@@ -229,20 +237,20 @@ final class SML_Strings {
 
 	public function page() { ?>
 		<div class="wrap sml-admin-wrap"><h1><?php esc_html_e( 'String Translation', 'smart-multilingual' ); ?></h1>
-		<p><?php esc_html_e( 'Translate visible theme/plugin strings and HTML attributes without editing the theme.', 'smart-multilingual' ); ?></p>
+		<p><?php echo esc_html( SML_Admin::ui_text( 'Translate visible theme/plugin strings and HTML attributes without editing the theme.', __( 'Translate visible theme/plugin strings and HTML attributes without editing the theme.', 'smart-multilingual' ) ) ); ?></p>
 		<form action="options.php" method="post"><?php settings_fields( 'sml_strings_group' ); ?>
 		<?php foreach ( SML_Languages::secondary() as $lang ) : $cfg = SML_Languages::get( $lang ); ?>
 		<div class="sml-card"><h2><?php echo esc_html( $cfg['native'] ); ?></h2>
-		<h3><?php esc_html_e( 'Language-only strings', 'smart-multilingual' ); ?></h3>
-		<p class="description"><?php echo esc_html( sprintf( __( 'Recommended for brand names and market-specific text. Rules in this box run only when the current language is %s and never affect the source or other languages.', 'smart-multilingual' ), $cfg['native'] ) ); ?><br><code>Brand name|||…</code></p>
-		<textarea name="sml_language_only_strings_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="7" placeholder="Brand name|||Translated brand name"><?php echo esc_textarea( (string) get_option( 'sml_language_only_strings_' . $lang, '' ) ); ?></textarea>
-		<h3><?php esc_html_e( 'Frontend strings', 'smart-multilingual' ); ?></h3><p class="description"><code>Original text|||Translation</code></p>
-		<textarea name="sml_string_translations_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="10" placeholder="Contact Us|||..."><?php echo esc_textarea( (string) get_option( 'sml_string_translations_' . $lang, '' ) ); ?></textarea>
-		<h3>HTML attributes</h3><p class="description">Format: <code>placeholder|||Search …|||جستجو...</code>. Supported attributes: placeholder, title, aria-label, aria-placeholder, value.</p>
-		<textarea name="sml_attribute_translations_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="7" placeholder="placeholder|||Search …|||..."><?php echo esc_textarea( (string) get_option( 'sml_attribute_translations_' . $lang, '' ) ); ?></textarea>
-		<h3>Scoped strings</h3><p class="description">Add a CSS class to an element, then use: <code>.sml-header-contact|||Contact|||تماس با ما</code></p>
-		<textarea name="sml_scoped_strings_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="5" placeholder=".sml-header-contact|||Contact|||..."><?php echo esc_textarea( (string) get_option( 'sml_scoped_strings_' . $lang, '' ) ); ?></textarea>
-		<h3>Sidebar mapping</h3><textarea name="sml_sidebar_map_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="4" placeholder="sidebar-1|||sidebar-<?php echo esc_attr( $lang ); ?>"><?php echo esc_textarea( (string) get_option( 'sml_sidebar_map_' . $lang, '' ) ); ?></textarea></div>
+		<h3><?php echo esc_html( SML_Admin::ui_text( 'Language-only strings', __( 'Language-only strings', 'smart-multilingual' ) ) ); ?></h3>
+		<p class="description"><?php echo esc_html( sprintf( SML_Admin::ui_text( 'Recommended for brand names and market-specific text. Rules in this box run only when the current language is %s and never affect the source or other languages.', __( 'Recommended for brand names and market-specific text. Rules in this box run only when the current language is %s and never affect the source or other languages.', 'smart-multilingual' ) ), $cfg['native'] ) ); ?><br><code><?php echo esc_html( SML_Admin::ui_text( 'Brand name|||Translated brand name', __( 'Brand name|||Translated brand name', 'smart-multilingual' ) ) ); ?></code></p>
+		<textarea name="sml_language_only_strings_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="7" placeholder="<?php echo esc_attr( SML_Admin::ui_text( 'Brand name|||Translated brand name', __( 'Brand name|||Translated brand name', 'smart-multilingual' ) ) ); ?>"><?php echo esc_textarea( (string) get_option( 'sml_language_only_strings_' . $lang, '' ) ); ?></textarea>
+		<h3><?php echo esc_html( SML_Admin::ui_text( 'Frontend strings', __( 'Frontend strings', 'smart-multilingual' ) ) ); ?></h3><p class="description"><code><?php echo esc_html( SML_Admin::ui_text( 'Original text|||Translation', __( 'Original text|||Translation', 'smart-multilingual' ) ) ); ?></code></p>
+		<textarea name="sml_string_translations_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="10" placeholder="<?php echo esc_attr( SML_Admin::ui_text( 'Original text|||Translation', __( 'Original text|||Translation', 'smart-multilingual' ) ) ); ?>"><?php echo esc_textarea( (string) get_option( 'sml_string_translations_' . $lang, '' ) ); ?></textarea>
+		<h3><?php echo esc_html( SML_Admin::ui_text( 'HTML attributes', __( 'HTML attributes', 'smart-multilingual' ) ) ); ?></h3><p class="description"><?php echo esc_html( sprintf( SML_Admin::ui_text( 'Format: %s. Supported attributes: %s', __( 'Format: %s. Supported attributes: %s', 'smart-multilingual' ) ), SML_Admin::ui_text( 'placeholder|||Search …|||...', __( 'placeholder|||Search …|||...', 'smart-multilingual' ) ), SML_Admin::ui_text( 'placeholder, title, aria-label, aria-placeholder, value', 'placeholder, title, aria-label, aria-placeholder, value' ) ) ); ?></p>
+		<textarea name="sml_attribute_translations_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="7" placeholder="<?php echo esc_attr( SML_Admin::ui_text( 'placeholder|||Search …|||...', __( 'placeholder|||Search …|||...', 'smart-multilingual' ) ) ); ?>"><?php echo esc_textarea( (string) get_option( 'sml_attribute_translations_' . $lang, '' ) ); ?></textarea>
+		<h3><?php echo esc_html( SML_Admin::ui_text( 'Scoped strings', __( 'Scoped strings', 'smart-multilingual' ) ) ); ?></h3><p class="description"><?php echo esc_html( sprintf( SML_Admin::ui_text( 'Add a CSS class to an element, then use: %s', __( 'Add a CSS class to an element, then use: %s', 'smart-multilingual' ) ), '.sml-header-contact|||Contact|||تماس با ما' ) ); ?></p>
+		<textarea name="sml_scoped_strings_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="5" placeholder="<?php echo esc_attr( '.sml-header-contact|||Contact|||...' ); ?>"><?php echo esc_textarea( (string) get_option( 'sml_scoped_strings_' . $lang, '' ) ); ?></textarea>
+		<h3><?php echo esc_html( SML_Admin::ui_text( 'Sidebar mapping', __( 'Sidebar mapping', 'smart-multilingual' ) ) ); ?></h3><textarea name="sml_sidebar_map_<?php echo esc_attr( $lang ); ?>" class="large-text code" rows="4" placeholder="<?php echo esc_attr( sprintf( 'sidebar-1|||sidebar-%s', $lang ) ); ?>"><?php echo esc_textarea( (string) get_option( 'sml_sidebar_map_' . $lang, '' ) ); ?></textarea></div>
 		<?php endforeach; submit_button(); ?></form></div><?php
 	}
 }

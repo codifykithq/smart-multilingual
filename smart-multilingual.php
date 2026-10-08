@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Smart Multilingual
- * Plugin URI: https://novinmaster.com/
- * Description: Lightweight multilingual toolkit for WordPress, Elementor and WooCommerce-ready websites.
- * Version: 1.0.8
+ * Plugin URI: https://codifykit.com/
+ * Description: A lightweight multilingual toolkit for WordPress with Elementor, WooCommerce, dynamic language routing, RTL/LTR support, translations, menus, media and theme templates.
+ * Version: 1.0.30
  * Author: Ali Vanaei
- * Author URI: https://novinmaster.com/
+ * Author URI: https://codifykit.com/
  * Text Domain: smart-multilingual
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -15,7 +15,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SML_VERSION', '1.0.8' );
+define( 'SML_VERSION', '1.0.30' );
 define( 'SML_FILE', __FILE__ );
 define( 'SML_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SML_URL', plugin_dir_url( __FILE__ ) );

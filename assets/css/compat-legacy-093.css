@@ -451,7 +451,7 @@ html[dir="rtl"] body.sml-rtl .sml-mirror-layout {
 
 /* 0.7.2 — language visibility and editor safety. */
 body.sml-elementor-editing .sml-only-en,
-body.sml-elementor-editing .sml-only-fa,
+body.sml-elementor-editing .sml-only-rtl,
 body.sml-elementor-editing .sml-only-tr,
 body.sml-elementor-editing .sml-only-ar,
 body.sml-elementor-editing .sml-only-de,
@@ -530,34 +530,34 @@ body.sml-elementor-editing [class*="sml-except-"] {
 }
 
 /* 0.8.3 — translated WooCommerce single-product compatibility.
-   Every selector is limited to the Persian single-product view so the prior
+   Every selector is limited to the RTL single-product view so the prior
    header, footer, blog, sidebar and Slider Revolution corrections keep their
    established behavior. */
-html[dir="rtl"] body.sml-lang-fa.single-product #content > .col-full,
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-location-single,
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-location-single > .elementor-element,
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-18518ac,
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-18518ac > .e-con-inner {
+html[dir="rtl"] body.sml-dir-rtl.single-product #content > .col-full,
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-location-single,
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-location-single > .elementor-element,
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-18518ac,
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-18518ac > .e-con-inner {
 	box-sizing: border-box !important;
 	width: 100% !important;
 	min-width: 0 !important;
 }
 
 /* The product template's two primary columns need breathing room in RTL. */
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-02a8a61 {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-02a8a61 {
 	column-gap: clamp(28px, 4vw, 72px) !important;
 	row-gap: 28px !important;
 	align-items: flex-start !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product :is(.elementor-element-5021838, .elementor-element-0bd52b8, .elementor-element-e59522a),
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-e59522a :is(.woocommerce-product-gallery, .woocommerce-product-gallery__wrapper, .woocommerce-product-gallery__image, .woocommerce-product-gallery__image a) {
+html[dir="rtl"] body.sml-dir-rtl.single-product :is(.elementor-element-5021838, .elementor-element-0bd52b8, .elementor-element-e59522a),
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-e59522a :is(.woocommerce-product-gallery, .woocommerce-product-gallery__wrapper, .woocommerce-product-gallery__image, .woocommerce-product-gallery__image a) {
 	box-sizing: border-box !important;
 	min-width: 0 !important;
 	max-width: 100% !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-e59522a .woocommerce-product-gallery__image img {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-e59522a .woocommerce-product-gallery__image img {
 	display: block !important;
 	width: 100% !important;
 	max-width: 100% !important;
@@ -566,53 +566,53 @@ html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-e59522a .wooc
 }
 
 /* HFE renders the home icon and its label as separate siblings. */
-html[dir="rtl"] body.sml-lang-fa.single-product .hfe-breadcrumbs-first {
+html[dir="rtl"] body.sml-dir-rtl.single-product .hfe-breadcrumbs-first {
 	display: inline-flex !important;
 	align-items: center !important;
 	gap: .5em !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product .hfe-breadcrumbs-home-icon {
+html[dir="rtl"] body.sml-dir-rtl.single-product .hfe-breadcrumbs-home-icon {
 	display: inline-flex !important;
 	align-items: center !important;
 	margin: 0 !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-location-single :is(.woocommerce-product-details__short-description, .elementor-widget-text-editor, .elementor-heading-title) {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-location-single :is(.woocommerce-product-details__short-description, .elementor-widget-text-editor, .elementor-heading-title) {
 	direction: rtl !important;
 	text-align: right !important;
 }
 
 /* Technical Information is two flex columns rather than a semantic table.
    Keep labels on the visual right and values on the visual left. */
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-cd88b49 {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-cd88b49 {
 	direction: ltr !important;
 	flex-direction: row-reverse !important;
 	column-gap: clamp(20px, 3vw, 56px) !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-73e0a63 {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-73e0a63 {
 	direction: rtl !important;
 	text-align: right !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-8e9c379 {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-8e9c379 {
 	direction: ltr !important;
 	text-align: left !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-73e0a63 .elementor-heading-title {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-73e0a63 .elementor-heading-title {
 	direction: rtl !important;
 	text-align: right !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-8e9c379 .elementor-heading-title {
+html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-8e9c379 .elementor-heading-title {
 	direction: ltr !important;
 	text-align: left !important;
 }
 
 @media (max-width: 767px) {
-	html[dir="rtl"] body.sml-lang-fa.single-product .elementor-element-cd88b49 {
+	html[dir="rtl"] body.sml-dir-rtl.single-product .elementor-element-cd88b49 {
 		column-gap: 14px !important;
 	}
 }
@@ -632,14 +632,14 @@ html[dir="ltr"] body.sml-dir-ltr .elementor-location-footer {
 
 /* HFE renders its home glyph and label as separate siblings. The earlier
    product-only rule did not cover translated Elementor pages such as Coating. */
-html[dir="rtl"] body.sml-lang-fa .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-first {
+html[dir="rtl"] body.sml-dir-rtl .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-first {
 	display: inline-flex !important;
 	align-items: center !important;
 	column-gap: .5em !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-home-icon,
-html[dir="rtl"] body.sml-lang-fa .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-first > a {
+html[dir="rtl"] body.sml-dir-rtl .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-home-icon,
+html[dir="rtl"] body.sml-dir-rtl .elementor-widget-hfe-breadcrumbs-widget .hfe-breadcrumbs-first > a {
 	display: inline-flex !important;
 	align-items: center !important;
 	margin: 0 !important;
@@ -656,16 +656,16 @@ body.sml-language-ready .elementor[data-elementor-id="9740"] .elementor-element-
 	line-height: 1.55 !important;
 }
 
-html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-1969601,
-html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title,
-html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title > a {
+html[dir="rtl"] body.sml-dir-rtl .elementor[data-elementor-id="9890"] .elementor-element-1969601,
+html[dir="rtl"] body.sml-dir-rtl .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title,
+html[dir="rtl"] body.sml-dir-rtl .elementor[data-elementor-id="9890"] .elementor-element-1969601 .elementor-heading-title > a {
 	direction: rtl !important;
 	text-align: right !important;
 }
 
 /* Font Awesome's source path already points right. Neutralize theme-level RTL
    SVG mirroring without moving the icon box to the other side of the card. */
-html[dir="rtl"] body.sml-lang-fa .elementor[data-elementor-id="9890"] .elementor-element-7d912d9 .e-fas-arrow-right {
+html[dir="rtl"] body.sml-dir-rtl .elementor[data-elementor-id="9890"] .elementor-element-7d912d9 .e-fas-arrow-right {
 	transform: none !important;
 }
 

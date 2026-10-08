@@ -7,7 +7,7 @@ defined( 'ABSPATH' ) || exit;
  * Version 1.0 no longer assumes that English is the source language. Existing
  * installations remain English-first because their saved registry already has
  * an empty English prefix. Fresh installations use the WordPress site locale
- * as the source language and add Persian as the first secondary language.
+ * as the source language and add English/Arabic baseline languages when needed.
  */
 final class SML_Languages {
 	const OPTION_KEY = 'sml_language_registry';
@@ -19,7 +19,6 @@ final class SML_Languages {
 	public static function builtins() {
 		return array(
 			'en' => array( 'name' => 'English', 'native' => 'English', 'locale' => 'en_US', 'prefix' => 'en', 'dir' => 'ltr', 'hreflang' => 'en', 'enabled' => 1 ),
-			'fa' => array( 'name' => 'Persian', 'native' => 'فارسی', 'locale' => 'fa_IR', 'prefix' => 'fa', 'dir' => 'rtl', 'hreflang' => 'fa-IR', 'enabled' => 1 ),
 			'tr' => array( 'name' => 'Turkish', 'native' => 'Türkçe', 'locale' => 'tr_TR', 'prefix' => 'tr', 'dir' => 'ltr', 'hreflang' => 'tr-TR', 'enabled' => 1 ),
 			'ar' => array( 'name' => 'Arabic', 'native' => 'العربية', 'locale' => 'ar', 'prefix' => 'ar', 'dir' => 'rtl', 'hreflang' => 'ar', 'enabled' => 1 ),
 			'de' => array( 'name' => 'German', 'native' => 'Deutsch', 'locale' => 'de_DE', 'prefix' => 'de', 'dir' => 'ltr', 'hreflang' => 'de-DE', 'enabled' => 1 ),
@@ -59,7 +58,7 @@ final class SML_Languages {
 			'native'   => strtoupper( $code ),
 			'locale'   => $locale ?: $code,
 			'prefix'   => $code,
-			'dir'      => in_array( $code, array( 'ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'ku', 'nqo', 'ps', 'sd', 'ug', 'ur', 'yi' ), true ) ? 'rtl' : 'ltr',
+			'dir'      => in_array( $code, array( 'ar', 'arc', 'ckb', 'dv', 'he', 'ku', 'nqo', 'ps', 'sd', 'ug', 'ur', 'yi' ), true ) ? 'rtl' : 'ltr',
 			'hreflang' => str_replace( '_', '-', $locale ?: $code ),
 			'enabled'  => 1,
 		);
@@ -68,8 +67,13 @@ final class SML_Languages {
 		$source['prefix'] = '';
 
 		$registry = array( $code => $source );
-		if ( 'fa' !== $code ) {
-			$registry['fa'] = $presets['fa'];
+
+		/* Fresh international installs keep English and Arabic available as baseline choices. */
+		foreach ( array( 'en', 'ar' ) as $baseline_code ) {
+			if ( $baseline_code === $code || isset( $registry[ $baseline_code ] ) ) {
+				continue;
+			}
+			$registry[ $baseline_code ] = $presets[ $baseline_code ];
 		}
 		self::$initial_registry_cache = $registry;
 		return self::$initial_registry_cache;
@@ -110,16 +114,76 @@ final class SML_Languages {
 		}
 
 		$settings = get_option( 'sml_settings', array() );
+		$saved    = get_option( self::OPTION_KEY, array() );
 		if ( is_array( $settings ) && ! empty( $settings['default_language'] ) ) {
 			$requested = sanitize_key( $settings['default_language'] );
-			$saved     = get_option( self::OPTION_KEY, array() );
-			if ( is_array( $saved ) && isset( $saved[ $requested ] ) ) {
+			/* The root URL is the final authority. A stale settings value must never
+			 * make a prefixed language behave as the source language. This also
+			 * self-heals interrupted upgrades where settings and registry temporarily
+			 * disagree. */
+			if (
+				is_array( $saved ) &&
+				isset( $saved[ $requested ] ) &&
+				is_array( $saved[ $requested ] ) &&
+				'' === trim( (string) ( $saved[ $requested ]['prefix'] ?? '' ) )
+			) {
 				self::$default_code_cache = $requested;
 				return self::$default_code_cache;
 			}
 		}
-		self::$default_code_cache = self::discover_default_from_registry( get_option( self::OPTION_KEY, array() ) );
+		self::$default_code_cache = self::discover_default_from_registry( $saved );
 		return self::$default_code_cache;
+	}
+
+
+	/**
+	 * Change the source/default language and keep the URL registry consistent.
+	 *
+	 * The default language is the only language allowed to have an empty URL
+	 * prefix. When the source language changes, the previous source language is
+	 * moved to its own code prefix (for example /en/) unless it already has a
+	 * non-empty unique prefix. This avoids two languages competing for the root
+	 * URL and prevents WordPress from falling back to the wrong language.
+	 */
+	public static function set_default( $code ) {
+		$code = sanitize_key( $code );
+		$registry = get_option( self::OPTION_KEY, array() );
+		if ( ! is_array( $registry ) || ! isset( $registry[ $code ] ) || ! is_array( $registry[ $code ] ) ) {
+			return false;
+		}
+
+		$used = array();
+		$normalized = array();
+		foreach ( $registry as $language_code => $cfg ) {
+			$language_code = sanitize_key( $language_code );
+			if ( ! $language_code || ! is_array( $cfg ) ) continue;
+
+			$is_default = ( $language_code === $code );
+			$clean = self::sanitize_language( $language_code, $cfg, $is_default );
+			if ( $is_default ) {
+				$clean['prefix'] = '';
+				$clean['enabled'] = 1;
+			} else {
+				$prefix = sanitize_title( (string) ( $cfg['prefix'] ?? '' ) );
+				if ( '' === $prefix || isset( $used[ $prefix ] ) ) {
+					$prefix = sanitize_title( $language_code );
+				}
+				$base = $prefix ?: $language_code;
+				$i = 2;
+				while ( isset( $used[ $prefix ] ) ) {
+					$prefix = $base . '-' . $i;
+					$i++;
+				}
+				$clean['prefix'] = $prefix;
+				$used[ $prefix ] = true;
+			}
+			$normalized[ $language_code ] = $clean;
+		}
+
+		if ( empty( $normalized[ $code ] ) ) return false;
+		update_option( self::OPTION_KEY, $normalized, false );
+		self::clear_cache();
+		return true;
 	}
 
 	/** Reset request-local caches after an administrator changes the registry. */

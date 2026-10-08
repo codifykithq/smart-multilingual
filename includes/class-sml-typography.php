@@ -36,6 +36,10 @@ final class SML_Typography {
 		);
 	}
 
+	public static function bootstrap_defaults( $settings ) {
+		return is_array( $settings ) ? $settings : array();
+	}
+
 	public static function sanitize_fonts( $input, $allowed_languages ) {
 		$output = array();
 		foreach ( $allowed_languages as $language ) {
@@ -110,14 +114,14 @@ final class SML_Typography {
 				 *
 				 * Previous builds only registered the scoped alias. The Typography UI
 				 * showed "YekanBakh-Medium", but the browser only knew
-				 * "YekanBakh-Medium SML fa". That made manual CSS appear to be ignored
+				 * "Example Font SML ar". That made manual CSS appear to be ignored
 				 * and made theme overrides difficult to diagnose.
 				 */
 				$public_family = self::css_family( $row['family'] );
 				$scoped_family = self::registered_family( $row['family'], $language );
 				$url           = esc_url( $row['url'] );
 				$ext           = strtolower( pathinfo( (string) wp_parse_url( $url, PHP_URL_PATH ), PATHINFO_EXTENSION ) );
-				$format        = 'woff2' === $ext ? 'woff2' : ( 'woff' === $ext ? 'woff' : 'woff2' );
+				$format        = 'woff2' === $ext ? 'woff2' : ( 'woff' === $ext ? 'woff' : ( 'ttf' === $ext ? 'truetype' : ( 'otf' === $ext ? 'opentype' : 'woff2' ) ) );
 				$weight        = 'variable' === ( $row['type'] ?? '' ) ? absint( $row['weight_min'] ) . ' ' . absint( $row['weight_max'] ) : absint( $row['weight_min'] );
 				$style         = esc_attr( $row['style'] ?? 'normal' );
 				$display       = esc_attr( $row['display'] ?? 'swap' );
@@ -183,7 +187,7 @@ final class SML_Typography {
 	 *
 	 * Unlike compile_css(), selectors here intentionally do not depend on a class
 	 * on <body>. The method is only called while rendering the current frontend
-	 * request, so a Persian /fa/ response can safely receive Persian typography
+	 * request, so an RTL-language response can safely receive language-specific typography
 	 * even when a custom theme omits body_class() and language_attributes().
 	 */
 	public static function compile_active_language_css( $settings, $language ) {

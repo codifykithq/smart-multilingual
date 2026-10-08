@@ -12,6 +12,15 @@ final class SML_Admin {
 	}
 
 	private function __construct() {
+		/* IMPORTANT: Never alter WordPress admin locale, direction, language_attributes,
+		 * admin_body_class, $wp_locale or core admin text domains here. The dashboard
+		 * belongs entirely to WordPress/User Profile. Smart Multilingual may localize
+		 * only its own text-domain strings and scope RTL/LTR to its own wrapper. */
+		/* Keep the WordPress dashboard locale completely independent from the website
+		 * source language, while allowing Smart Multilingual's own UI to follow the
+		 * selected source language. */
+		add_filter( 'gettext', array( $this, 'translate_plugin_admin_string' ), PHP_INT_MAX, 3 );
+		add_filter( 'gettext_with_context', array( $this, 'translate_plugin_admin_context_string' ), PHP_INT_MAX, 4 );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_assets' ) );
@@ -33,25 +42,56 @@ final class SML_Admin {
 		 */
 	}
 
+
+
+	/**
+	 * Smart Multilingual's own admin copy follows the selected source language
+	 * without changing WordPress' dashboard language. This is intentionally
+	 * scoped to this plugin text domain only.
+	 */
+	public function translate_plugin_admin_string( $translation, $text, $domain ) {
+		if ( 'smart-multilingual' !== $domain || ! is_admin() ) return $translation;
+		return self::ui_text( $text, $translation );
+	}
+
+	public function translate_plugin_admin_context_string( $translation, $text, $context, $domain ) {
+		if ( 'smart-multilingual' !== $domain || ! is_admin() ) return $translation;
+		return self::ui_text( $text, $translation );
+	}
+
+	/**
+	 * Resolve Smart Multilingual's own admin language independently from the
+	 * WordPress dashboard locale. This is the authoritative UI translator used
+	 * by menu labels and as the final gettext fallback.
+	 */
+	public static function ui_text( $text, $fallback = null ) {
+		$text = (string) $text;
+		return null !== $fallback ? $fallback : $text;
+	}
+
+	private static function ui_echo( $text ) {
+		echo esc_html( self::ui_text( $text ) );
+	}
+
 	public function plugin_action_links( $links ) {
-		$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=smart-multilingual-settings' ) ) . '">' . esc_html__( 'Settings', 'smart-multilingual' ) . '</a>';
+		$settings_link = '<a href="' . esc_url( admin_url( 'admin.php?page=smart-multilingual-settings' ) ) . '">' . esc_html( self::ui_text( 'Settings' ) ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}
 
 	public function admin_menu() {
 		add_menu_page(
-			__( 'Smart Multilingual', 'smart-multilingual' ),
-			__( 'Languages', 'smart-multilingual' ),
+			self::ui_text( 'Smart Multilingual' ),
+			self::ui_text( 'Languages' ),
 			'manage_options',
 			'smart-multilingual',
 			array( $this, 'dashboard_page' ),
 			'dashicons-translation',
 			58
 		);
-		add_submenu_page( 'smart-multilingual', __( 'Settings', 'smart-multilingual' ), __( 'Settings', 'smart-multilingual' ), 'manage_options', 'smart-multilingual-settings', array( $this, 'settings_page' ) );
-		add_submenu_page( 'smart-multilingual', __( 'Menu Translation', 'smart-multilingual' ), __( 'Menus', 'smart-multilingual' ), 'manage_options', 'smart-multilingual-menus', array( $this, 'menus_page' ) );
-		add_submenu_page( 'smart-multilingual', __( 'WooCommerce Attributes', 'smart-multilingual' ), __( 'Attributes', 'smart-multilingual' ), 'manage_woocommerce', 'smart-multilingual-attributes', array( $this, 'attributes_page' ) );
+		add_submenu_page( 'smart-multilingual', self::ui_text( 'Settings' ), self::ui_text( 'Settings' ), 'manage_options', 'smart-multilingual-settings', array( $this, 'settings_page' ) );
+		add_submenu_page( 'smart-multilingual', self::ui_text( 'Menu Translation' ), self::ui_text( 'Menus' ), 'manage_options', 'smart-multilingual-menus', array( $this, 'menus_page' ) );
+		add_submenu_page( 'smart-multilingual', self::ui_text( 'WooCommerce Attributes' ), self::ui_text( 'Attributes' ), 'manage_woocommerce', 'smart-multilingual-attributes', array( $this, 'attributes_page' ) );
 	}
 
 	public function register_settings() {
@@ -60,14 +100,29 @@ final class SML_Admin {
 	}
 
 	public function maybe_flush_rewrites( $old, $new ) {
-		if ( ( $old['enabled_languages'] ?? array() ) !== ( $new['enabled_languages'] ?? array() ) ) {
+		if (
+			( $old['enabled_languages'] ?? array() ) !== ( $new['enabled_languages'] ?? array() ) ||
+			( $old['default_language'] ?? '' ) !== ( $new['default_language'] ?? '' )
+		) {
 			update_option( 'sml_rewrite_flush_required', 1, false );
 		}
 	}
 
 	public function sanitize_settings( $input ) {
 		$registry = SML_Languages::registry();
-		$default   = SML_Languages::default_code();
+		$current_default = SML_Languages::default_code();
+		$requested_default = isset( $input['default_language'] ) ? sanitize_key( $input['default_language'] ) : $current_default;
+		$default = isset( $registry[ $requested_default ] ) ? $requested_default : $current_default;
+
+		/* A default-language change is structural: the selected source language must
+		 * own the root URL and every other language must have a prefix. Keep that
+		 * invariant in the registry before the settings option is persisted. */
+		/* Always normalize the registry against the explicitly selected source. This
+		 * also repairs stale upgrades where Settings and the language registry
+		 * still leaves English owning the root URL. */
+		SML_Languages::set_default( $default );
+		$registry = SML_Languages::registry();
+
 		$enabled  = isset( $input['enabled_languages'] ) ? array_map( 'sanitize_key', (array) $input['enabled_languages'] ) : array_keys( $registry );
 		$enabled  = array_values( array_intersect( array_keys( $registry ), $enabled ) );
 		if ( ! in_array( $default, $enabled, true ) ) { array_unshift( $enabled, $default ); }
@@ -76,9 +131,7 @@ final class SML_Admin {
 		$menus = array();
 		foreach ( $enabled as $code ) { if ( ! empty( $input['language_menus'][ $code ] ) ) $menus[ $code ] = absint( $input['language_menus'][ $code ] ); }
 		return array(
-			'default_language' => $default,
-			'persian_prefix' => 'fa',
-			'persian_menu' => ! empty( $menus['fa'] ) ? $menus['fa'] : 0, 'language_menus' => $menus,
+			'default_language' => $default, 'language_menus' => $menus,
 			'enabled_languages' => $enabled, 'switcher_languages' => $switcher,
 			'switcher_labels' => in_array( $input['switcher_labels'] ?? 'native', array( 'short', 'full', 'native' ), true ) ? $input['switcher_labels'] : 'native',
 			'switcher_layout' => in_array( $input['switcher_layout'] ?? 'dropdown', array( 'dropdown', 'list' ), true ) ? $input['switcher_layout'] : 'dropdown',
@@ -91,7 +144,6 @@ final class SML_Admin {
 			'switcher_menu_bg_color' => $this->sanitize_css_color( $input['switcher_menu_bg_color'] ?? '#ffffff', '#ffffff' ),
 			'switcher_border_color' => $this->sanitize_css_color( $input['switcher_border_color'] ?? 'transparent', 'transparent' ),
 			'switcher_radius' => min( 40, absint( $input['switcher_radius'] ?? 6 ) ),
-			'use_persian_dates' => empty( $input['use_persian_dates'] ) ? 0 : 1,
 			'hide_untranslated' => empty( $input['hide_untranslated'] ) ? 0 : 1, 'rtl_reverse_columns' => empty( $input['rtl_reverse_columns'] ) ? 0 : 1,
 			'delete_data' => empty( $input['delete_data'] ) ? 0 : 1,
 			'compatibility_profiles' => SML_Compatibility::sanitize( $input['compatibility_profiles'] ?? array() ),
@@ -188,11 +240,68 @@ final class SML_Admin {
 		$existing = SML_Plugin::get_group_translations( $group ); if ( ! empty( $existing[ $target ] ) ) { wp_safe_redirect( get_edit_post_link( $existing[ $target ], 'raw' ) ); exit; }
 		$default_id = ! empty( $existing[ SML_Languages::default_code() ] ) ? (int) $existing[ SML_Languages::default_code() ] : $post_id;
 		$source_path = SML_Plugin::relative_url_path( get_permalink( $default_id ) ); $cfg = SML_Languages::get( $target );
-		$new_id = wp_insert_post( wp_slash( array( 'post_type'=>$source->post_type,'post_status'=>'draft','post_title'=>$source->post_title.' — '.$cfg['native'],'post_name'=>$source->post_name,'post_content'=>$source->post_content,'post_excerpt'=>$source->post_excerpt,'post_parent'=>$this->translated_parent($source->post_parent,$target),'menu_order'=>$source->menu_order,'comment_status'=>$source->comment_status,'ping_status'=>$source->ping_status,'post_author'=>get_current_user_id() ) ), true );
+		$translation_slug = $this->translation_post_slug( $source, $target, $existing );
+		$new_id = wp_insert_post( wp_slash( array( 'post_type'=>$source->post_type,'post_status'=>'draft','post_title'=>$source->post_title.' — '.$cfg['native'],'post_name'=>$translation_slug,'post_content'=>$source->post_content,'post_excerpt'=>$source->post_excerpt,'post_parent'=>$this->translated_parent($source->post_parent,$target),'menu_order'=>$source->menu_order,'comment_status'=>$source->comment_status,'ping_status'=>$source->ping_status,'post_author'=>get_current_user_id() ) ), true );
 		if ( is_wp_error( $new_id ) ) wp_die( esc_html( $new_id->get_error_message() ) );
-		$this->copy_taxonomies( $post_id, $new_id, $source->post_type, $target ); $this->copy_post_meta( $post_id, $new_id ); $this->refresh_elementor_data( $new_id );
+		$this->copy_taxonomies( $post_id, $new_id, $source->post_type, $target ); $this->copy_post_meta( $post_id, $new_id ); $this->preserve_elementor_theme_builder_type( $post_id, $new_id ); $this->refresh_elementor_data( $new_id );
 		update_post_meta( $new_id, SML_Plugin::META_GROUP, $group ); update_post_meta( $new_id, SML_Plugin::META_SOURCE_PATH, $source_path ); update_post_meta( $new_id, SML_Plugin::META_LANG, $target ); update_post_meta( $new_id, '_sml_source_modified', $source->post_modified_gmt );
 		wp_safe_redirect( add_query_arg( array( 'sml_created'=>'1', 'sml_language'=>$target ), get_edit_post_link( $new_id, 'raw' ) ) ); exit;
+	}
+
+
+	/**
+	 * Build the initial slug for a newly-created translation.
+	 *
+	 * The suffix always comes from the saved language CODE (the registry key,
+	 * originating from languages[<row>][code]) rather than from a hard-coded
+	 * language code such as "ar". This keeps future languages automatic: en, ar,
+	 * ar, de, etc. The source/default-language slug remains the stable base so
+	 * translating a translated item never produces stacked suffixes such as
+	 * about-us-en-tr.
+	 */
+	private function translation_post_slug( $source, $target_lang, $existing = array() ) {
+		$target_lang = sanitize_key( $target_lang );
+		$default     = SML_Languages::default_code();
+		$base_post   = $source;
+
+		if ( ! empty( $existing[ $default ] ) ) {
+			$default_post = get_post( (int) $existing[ $default ] );
+			if ( $default_post ) {
+				$base_post = $default_post;
+			}
+		}
+
+		$base_slug = sanitize_title( (string) $base_post->post_name );
+		if ( '' === $base_slug ) {
+			$base_slug = sanitize_title( (string) $base_post->post_title );
+		}
+
+		/* If no source-language item exists in the group yet and the selected base
+		 * is itself a translation created by SML, remove only its own exact language
+		 * suffix before adding the new target code. */
+		$base_lang = get_post_meta( $base_post->ID, SML_Plugin::META_LANG, true );
+		$base_lang = $base_lang ? sanitize_key( $base_lang ) : $default;
+		if ( $base_lang !== $default ) {
+			$base_code = $this->slug_language_code( $base_lang );
+			$suffix    = '-' . $base_code;
+			if ( $base_code && substr( $base_slug, -strlen( $suffix ) ) === $suffix ) {
+				$base_slug = substr( $base_slug, 0, -strlen( $suffix ) );
+				$base_slug = rtrim( $base_slug, '-' );
+			}
+		}
+
+		if ( $target_lang === $default ) {
+			return $base_slug;
+		}
+
+		$target_code = $this->slug_language_code( $target_lang );
+		return sanitize_title( $base_slug . '-' . $target_code );
+	}
+
+	/** Return the URL-safe suffix derived from the configured language Code. */
+	private function slug_language_code( $language ) {
+		$language = sanitize_key( $language );
+		return trim( sanitize_title( str_replace( '_', '-', $language ) ), '-' );
 	}
 
 	private function translated_parent( $parent_id, $target_lang ) {
@@ -319,6 +428,25 @@ final class SML_Admin {
 		clean_post_cache( $target_id );
 	}
 
+
+	/** Preserve Elementor Pro Theme Builder document type on translated templates. */
+	private function preserve_elementor_theme_builder_type( $source_id, $target_id ) {
+		if ( 'elementor_library' !== get_post_type( $source_id ) ) {
+			return;
+		}
+		$type = get_post_meta( $source_id, '_elementor_template_type', true );
+		if ( ! in_array( $type, array( 'header', 'footer', 'archive', 'single' ), true ) ) {
+			return;
+		}
+		delete_post_meta( $target_id, '_elementor_template_type' );
+		update_post_meta( $target_id, '_elementor_template_type', $type );
+		$conditions = get_post_meta( $source_id, '_elementor_conditions', true );
+		if ( ! empty( $conditions ) ) {
+			delete_post_meta( $target_id, '_elementor_conditions' );
+			update_post_meta( $target_id, '_elementor_conditions', $conditions );
+		}
+	}
+
 	private function refresh_elementor_data( $post_id ) {
 		// Never save the Elementor document here: saving can normalize or overwrite
 		// freshly cloned JSON. Only remove generated CSS and clear caches.
@@ -378,22 +506,26 @@ final class SML_Admin {
 		$menus    = wp_get_nav_menus();
 		$key      = SML_Plugin::OPTION_KEY;
 		$default  = SML_Languages::default_code();
+		$default_cfg = isset( $registry[ $default ] ) ? $registry[ $default ] : array();
+		$settings_dir = ( isset( $default_cfg['dir'] ) && 'rtl' === $default_cfg['dir'] ) ? 'rtl' : 'ltr';
 		?>
-		<div class="wrap sml-admin-wrap sml-settings-shell">
-			<header class="sml-settings-hero"><div><span class="sml-kicker">SMART MULTILINGUAL <?php echo esc_html( SML_VERSION ); ?></span><h1><?php esc_html_e( 'Language design system', 'smart-multilingual' ); ?></h1><p><?php esc_html_e( 'Core generates language metadata only. Typography and compatibility behavior are opt-in.', 'smart-multilingual' ); ?></p></div><span class="sml-health-chip"><i></i><?php esc_html_e( 'Theme-neutral core', 'smart-multilingual' ); ?></span></header>
+		<div class="wrap sml-admin-wrap sml-settings-shell sml-settings-dir-<?php echo esc_attr( $settings_dir ); ?>" dir="<?php echo esc_attr( $settings_dir ); ?>">
+			<header class="sml-settings-hero"><div><span class="sml-kicker">SMART MULTILINGUAL <?php echo esc_html( SML_VERSION ); ?></span><h1><?php self::ui_echo( 'Language design system' ); ?></h1><p><?php self::ui_echo( 'Core generates language metadata only. Typography and compatibility behavior are opt-in.' ); ?></p></div><span class="sml-health-chip"><i></i><?php self::ui_echo( 'Theme-neutral core' ); ?></span></header>
 			<nav class="sml-settings-tabs" aria-label="Settings sections">
-				<button type="button" class="is-active" data-sml-settings-tab="general"><span class="dashicons dashicons-admin-site-alt3"></span><?php esc_html_e( 'General', 'smart-multilingual' ); ?></button>
-				<button type="button" data-sml-settings-tab="typography"><span class="dashicons dashicons-editor-textcolor"></span><?php esc_html_e( 'Typography', 'smart-multilingual' ); ?></button>
-				<button type="button" data-sml-settings-tab="appearance"><span class="dashicons dashicons-art"></span><?php esc_html_e( 'Switcher & RTL', 'smart-multilingual' ); ?></button>
-				<button type="button" data-sml-settings-tab="compatibility"><span class="dashicons dashicons-admin-plugins"></span><?php esc_html_e( 'Compatibility', 'smart-multilingual' ); ?></button>
+				<button type="button" class="is-active" data-sml-settings-tab="general"><span class="dashicons dashicons-admin-site-alt3"></span><?php self::ui_echo( 'General' ); ?></button>
+				<button type="button" data-sml-settings-tab="typography"><span class="dashicons dashicons-editor-textcolor"></span><?php self::ui_echo( 'Typography' ); ?></button>
+				<button type="button" data-sml-settings-tab="appearance"><span class="dashicons dashicons-art"></span><?php self::ui_echo( 'Switcher & RTL' ); ?></button>
+				<button type="button" data-sml-settings-tab="compatibility"><span class="dashicons dashicons-admin-plugins"></span><?php self::ui_echo( 'Compatibility' ); ?></button>
 			</nav>
 			<form action="options.php" method="post" class="sml-settings-form"><?php settings_fields( 'sml_settings_group' ); ?>
 				<section class="sml-settings-panel is-active" data-sml-settings-panel="general">
-					<div class="sml-card sml-accent-blue"><div class="sml-card-heading"><div><h2><?php esc_html_e( 'Website languages', 'smart-multilingual' ); ?></h2><p><?php esc_html_e( 'The language with an empty URL prefix is the source language.', 'smart-multilingual' ); ?></p></div><span class="sml-info-badge">URL</span></div><div class="sml-language-grid">
-					<?php foreach ( $registry as $code => $cfg ) : ?><label class="sml-language-tile"><input type="checkbox" name="<?php echo esc_attr( $key ); ?>[enabled_languages][]" value="<?php echo esc_attr( $code ); ?>" <?php checked( in_array( $code, (array) $settings['enabled_languages'], true ) ); ?> <?php disabled( $default === $code ); ?>><span class="sml-code-badge"><?php echo esc_html( strtoupper( $code ) ); ?></span><span><strong><?php echo esc_html( $cfg['native'] ); ?></strong><small><?php echo esc_html( $cfg['name'] ); ?></small></span><code><?php echo $default === $code ? '/' : '/' . esc_html( $cfg['prefix'] ) . '/'; ?></code></label><?php endforeach; ?>
+					<div class="sml-card sml-accent-blue"><div class="sml-card-heading"><div><h2><?php self::ui_echo( 'Website languages' ); ?></h2><p><?php self::ui_echo( 'Choose the source language explicitly. The source language uses the root URL without a language prefix.' ); ?></p></div><span class="sml-info-badge">URL</span></div>
+					<div class="sml-field-grid" style="margin-bottom:18px"><label><span><?php self::ui_echo( 'Default / source language' ); ?></span><select name="<?php echo esc_attr( $key ); ?>[default_language]"><?php foreach ( $registry as $code => $cfg ) : ?><option value="<?php echo esc_attr( $code ); ?>" data-dir="<?php echo esc_attr( ( isset( $cfg['dir'] ) && 'rtl' === $cfg['dir'] ) ? 'rtl' : 'ltr' ); ?>" <?php selected( $default, $code ); ?>><?php echo esc_html( $cfg['native'] . ' (' . strtoupper( $code ) . ')' ); ?></option><?php endforeach; ?></select><small><?php self::ui_echo( 'Changing this also changes which language owns the root URL. Save permalinks after changing it.' ); ?></small></label></div>
+					<div class="sml-language-grid">
+					<?php foreach ( $registry as $code => $cfg ) : ?><label class="sml-language-tile"><input type="checkbox" name="<?php echo esc_attr( $key ); ?>[enabled_languages][]" value="<?php echo esc_attr( $code ); ?>" <?php checked( in_array( $code, (array) $settings['enabled_languages'], true ) ); ?> <?php disabled( $default === $code ); ?>><span class="sml-code-badge"><?php echo esc_html( strtoupper( $code ) ); ?></span><span><strong><?php echo esc_html( $cfg['native'] ); ?></strong><small><?php echo esc_html( self::ui_text( $cfg['name'] ) ); ?></small></span><code><?php echo $default === $code ? '/' : '/' . esc_html( $cfg['prefix'] ) . '/'; ?></code></label><?php endforeach; ?>
 					</div></div>
-					<div class="sml-card sml-accent-green"><div class="sml-card-heading"><div><h2><?php esc_html_e( 'Menus by language', 'smart-multilingual' ); ?></h2><p><?php esc_html_e( 'Leave a language on Theme menu when the active theme should decide.', 'smart-multilingual' ); ?></p></div><span class="sml-info-badge is-green">NAV</span></div><div class="sml-field-grid">
-					<?php foreach ( $registry as $code => $cfg ) : ?><label><span><?php echo esc_html( $cfg['native'] ); ?></span><select name="<?php echo esc_attr( $key ); ?>[language_menus][<?php echo esc_attr( $code ); ?>]"><option value="0"><?php esc_html_e( 'Use theme menu', 'smart-multilingual' ); ?></option><?php foreach ( $menus as $menu ) : ?><option value="<?php echo esc_attr( $menu->term_id ); ?>" <?php selected( absint( $settings['language_menus'][ $code ] ?? 0 ), $menu->term_id ); ?>><?php echo esc_html( $menu->name ); ?></option><?php endforeach; ?></select></label><?php endforeach; ?>
+					<div class="sml-card sml-accent-green"><div class="sml-card-heading"><div><h2><?php self::ui_echo( 'Menus by language' ); ?></h2><p><?php self::ui_echo( 'Leave a language on Theme menu when the active theme should decide.' ); ?></p></div><span class="sml-info-badge is-green">NAV</span></div><div class="sml-field-grid">
+					<?php foreach ( $registry as $code => $cfg ) : ?><label><span><?php echo esc_html( $cfg['native'] ); ?></span><select name="<?php echo esc_attr( $key ); ?>[language_menus][<?php echo esc_attr( $code ); ?>]"><option value="0"><?php self::ui_echo( 'Use theme menu' ); ?></option><?php foreach ( $menus as $menu ) : ?><option value="<?php echo esc_attr( $menu->term_id ); ?>" <?php selected( absint( $settings['language_menus'][ $code ] ?? 0 ), $menu->term_id ); ?>><?php echo esc_html( $menu->name ); ?></option><?php endforeach; ?></select></label><?php endforeach; ?>
 					</div></div>
 				</section>
 
@@ -412,13 +544,13 @@ final class SML_Admin {
 				<section class="sml-settings-panel" data-sml-settings-panel="appearance">
 					<div class="sml-card sml-accent-green"><div class="sml-card-heading"><div><h2><?php esc_html_e( 'Language switcher', 'smart-multilingual' ); ?></h2><p><?php esc_html_e( 'Choose visible languages, labels, behavior and visual appearance.', 'smart-multilingual' ); ?></p></div><code>[sml_language_switcher]</code></div><div class="sml-language-grid">
 					<?php foreach ( $registry as $code => $cfg ) : ?><label class="sml-language-tile"><input type="checkbox" name="<?php echo esc_attr( $key ); ?>[switcher_languages][]" value="<?php echo esc_attr( $code ); ?>" <?php checked( in_array( $code, (array) $settings['switcher_languages'], true ) ); ?>><span class="sml-code-badge"><?php echo esc_html( strtoupper( $code ) ); ?></span><strong><?php echo esc_html( $cfg['native'] ); ?></strong></label><?php endforeach; ?></div><div class="sml-field-grid sml-top-space">
-					<label><span><?php esc_html_e( 'Layout', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $key ); ?>[switcher_layout]"><option value="dropdown" <?php selected( $settings['switcher_layout'], 'dropdown' ); ?>>Dropdown</option><option value="list" <?php selected( $settings['switcher_layout'], 'list' ); ?>>Inline list</option></select></label>
-					<label><span><?php esc_html_e( 'Labels', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $key ); ?>[switcher_labels]"><option value="native" <?php selected( $settings['switcher_labels'], 'native' ); ?>>Native names</option><option value="short" <?php selected( $settings['switcher_labels'], 'short' ); ?>>EN / FA / TR</option><option value="full" <?php selected( $settings['switcher_labels'], 'full' ); ?>>Full names</option></select></label>
-					<label><span><?php esc_html_e( 'Missing translation', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $key ); ?>[switcher_missing_behavior]"><option value="home" <?php selected( $settings['switcher_missing_behavior'], 'home' ); ?>>Language homepage</option><option value="path" <?php selected( $settings['switcher_missing_behavior'], 'path' ); ?>>Same path</option><option value="hide" <?php selected( $settings['switcher_missing_behavior'], 'hide' ); ?>>Hide language</option></select></label>
+					<label><span><?php esc_html_e( 'Layout', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $key ); ?>[switcher_layout]"><option value="dropdown" <?php selected( $settings['switcher_layout'], 'dropdown' ); ?>><?php echo esc_html( self::ui_text( 'Dropdown' ) ); ?></option><option value="list" <?php selected( $settings['switcher_layout'], 'list' ); ?>><?php echo esc_html( self::ui_text( 'Inline list' ) ); ?></option></select></label>
+					<label><span><?php esc_html_e( 'Labels', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $key ); ?>[switcher_labels]"><option value="native" <?php selected( $settings['switcher_labels'], 'native' ); ?>><?php echo esc_html( self::ui_text( 'Native names' ) ); ?></option><option value="short" <?php selected( $settings['switcher_labels'], 'short' ); ?>><?php echo esc_html( self::ui_text( 'EN / AR / …' ) ); ?></option><option value="full" <?php selected( $settings['switcher_labels'], 'full' ); ?>><?php echo esc_html( self::ui_text( 'Full names' ) ); ?></option></select></label>
+					<label><span><?php esc_html_e( 'Missing translation', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $key ); ?>[switcher_missing_behavior]"><option value="home" <?php selected( $settings['switcher_missing_behavior'], 'home' ); ?>><?php echo esc_html( self::ui_text( 'Language homepage' ) ); ?></option><option value="path" <?php selected( $settings['switcher_missing_behavior'], 'path' ); ?>><?php echo esc_html( self::ui_text( 'Same path' ) ); ?></option><option value="hide" <?php selected( $settings['switcher_missing_behavior'], 'hide' ); ?>><?php echo esc_html( self::ui_text( 'Hide language' ) ); ?></option></select></label>
 					</div><?php $this->render_switcher_colors( $settings ); ?></div>
-					<div class="sml-card sml-accent-red"><div class="sml-card-heading"><div><h2><?php esc_html_e( 'RTL behavior', 'smart-multilingual' ); ?></h2><p><?php esc_html_e( 'Layout controls are independent from typography.', 'smart-multilingual' ); ?></p></div><span class="sml-info-badge is-red">RTL</span></div><label class="sml-toggle-row"><input type="checkbox" name="<?php echo esc_attr( $key ); ?>[rtl_reverse_columns]" value="1" <?php checked( ! empty( $settings['rtl_reverse_columns'] ) ); ?>><span><?php esc_html_e( 'Reverse horizontal Elementor rows for RTL languages', 'smart-multilingual' ); ?></span></label><label class="sml-toggle-row"><input type="checkbox" name="<?php echo esc_attr( $key ); ?>[use_persian_dates]" value="1" <?php checked( ! empty( $settings['use_persian_dates'] ) ); ?>><span><?php esc_html_e( 'Use Parsi Date output on Persian pages when available', 'smart-multilingual' ); ?></span></label></div>
+					<div class="sml-card sml-accent-red"><div class="sml-card-heading"><div><h2><?php esc_html_e( 'RTL behavior', 'smart-multilingual' ); ?></h2><p><?php esc_html_e( 'Layout controls are independent from typography.', 'smart-multilingual' ); ?></p></div><span class="sml-info-badge is-red">RTL</span></div><label class="sml-toggle-row"><input type="checkbox" name="<?php echo esc_attr( $key ); ?>[rtl_reverse_columns]" value="1" <?php checked( ! empty( $settings['rtl_reverse_columns'] ) ); ?>><span><?php esc_html_e( 'Reverse horizontal Elementor rows for RTL languages', 'smart-multilingual' ); ?></span></label></div>
 				</section>
-				<div class="sml-save-bar"><span><i></i><?php esc_html_e( 'Only enabled typography targets affect the frontend.', 'smart-multilingual' ); ?></span><?php submit_button( __( 'Save design system', 'smart-multilingual' ), 'primary', 'submit', false ); ?></div>
+				<div class="sml-save-bar"><span><i></i><?php self::ui_echo( 'Only enabled typography targets affect the frontend.' ); ?></span><?php submit_button( self::ui_text( 'Save design system' ), 'primary', 'submit', false ); ?></div>
 			</form>
 		</div>
 		<?php
@@ -430,7 +562,7 @@ final class SML_Admin {
 		if ( empty( $fonts ) ) $fonts[] = array( 'family'=>'', 'type'=>'existing', 'url'=>'', 'weight_min'=>400, 'weight_max'=>900, 'style'=>'normal', 'display'=>'swap' );
 		?>
 		<div class="sml-type-language-panel <?php echo $active ? 'is-active' : ''; ?>" data-sml-type-language-panel="<?php echo esc_attr( $code ); ?>">
-			<div class="sml-type-section-head"><div><h3><?php echo esc_html( $cfg['native'] ); ?> — <?php esc_html_e( 'Font library', 'smart-multilingual' ); ?></h3><p><?php esc_html_e( 'Use Existing for an Elementor/system font. Add one Variable file or one Static row per weight.', 'smart-multilingual' ); ?></p></div><button type="button" class="button sml-add-font-source" data-language="<?php echo esc_attr( $code ); ?>">+ <?php esc_html_e( 'Add font source', 'smart-multilingual' ); ?></button></div>
+			<div class="sml-type-section-head"><div><h3><?php echo esc_html( $cfg['native'] ); ?> — <?php esc_html_e( 'Font library', 'smart-multilingual' ); ?></h3><p><?php esc_html_e( 'Use Existing for an Elementor/system font. Add one Variable file or one Static row per weight.', 'smart-multilingual' ); ?></p></div><button type="button" class="button sml-add-font-source" data-language="<?php echo esc_attr( $code ); ?>">+ <?php esc_html_e( 'Add font source', 'smart-multilingual' ); ?></button></div><p class="description"><?php echo esc_html( self::ui_text( 'Use TTF/OTF/WOFF/WOFF2. Variable fonts can use a single file.', __( 'Use TTF/OTF/WOFF/WOFF2. Variable fonts can use a single file.', 'smart-multilingual' ) ) ); ?></p>
 			<div class="sml-font-rows" data-sml-font-rows="<?php echo esc_attr( $code ); ?>" data-next-index="<?php echo esc_attr( count( $fonts ) ); ?>"><?php foreach ( $fonts as $index => $font ) $this->render_font_source_row( $code, $index, $font ); ?></div>
 			<datalist id="sml-font-families-<?php echo esc_attr( $code ); ?>"><?php foreach ( $fonts as $font ) : if ( empty( $font['family'] ) ) continue; ?><option value="<?php echo esc_attr( $font['family'] ); ?>"><?php endforeach; ?></datalist>
 			<script type="text/html" id="tmpl-sml-font-source-<?php echo esc_attr( $code ); ?>"><?php $this->render_font_source_row( $code, '__INDEX__', array( 'family'=>'', 'type'=>'existing', 'url'=>'', 'weight_min'=>400, 'weight_max'=>900, 'style'=>'normal', 'display'=>'swap' ) ); ?></script>
@@ -442,7 +574,7 @@ final class SML_Admin {
 	private function render_font_source_row( $code, $index, $font ) {
 		$name = SML_Plugin::OPTION_KEY . '[typography_fonts][' . $code . '][' . $index . ']';
 		$type = $font['type'] ?? 'existing'; ?>
-		<div class="sml-font-source-row" data-font-type="<?php echo esc_attr( $type ); ?>"><div class="sml-font-source-main"><label><span><?php esc_html_e( 'Family', 'smart-multilingual' ); ?></span><input type="text" name="<?php echo esc_attr( $name ); ?>[family]" value="<?php echo esc_attr( $font['family'] ?? '' ); ?>" placeholder="Peyda"></label><label><span><?php esc_html_e( 'Source', 'smart-multilingual' ); ?></span><select class="sml-font-source-type" name="<?php echo esc_attr( $name ); ?>[type]"><option value="existing" <?php selected( $type, 'existing' ); ?>>Elementor / existing</option><option value="variable" <?php selected( $type, 'variable' ); ?>>Variable font</option><option value="static" <?php selected( $type, 'static' ); ?>>Static weight</option></select></label><label class="sml-font-weight-min"><span><?php esc_html_e( 'Min / weight', 'smart-multilingual' ); ?></span><input type="number" min="1" max="1000" name="<?php echo esc_attr( $name ); ?>[weight_min]" value="<?php echo esc_attr( $font['weight_min'] ?? 400 ); ?>"></label><label class="sml-font-weight-max"><span><?php esc_html_e( 'Max weight', 'smart-multilingual' ); ?></span><input type="number" min="1" max="1000" name="<?php echo esc_attr( $name ); ?>[weight_max]" value="<?php echo esc_attr( $font['weight_max'] ?? 900 ); ?>"></label></div><div class="sml-font-file-fields"><label class="sml-font-url-wrap"><span><?php esc_html_e( 'WOFF / WOFF2 URL', 'smart-multilingual' ); ?></span><span class="sml-input-action"><input class="sml-font-url" type="url" name="<?php echo esc_attr( $name ); ?>[url]" value="<?php echo esc_url( $font['url'] ?? '' ); ?>"><button type="button" class="button sml-font-upload"><?php esc_html_e( 'Choose file', 'smart-multilingual' ); ?></button></span></label><label><span><?php esc_html_e( 'Style', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $name ); ?>[style]"><?php foreach ( array('normal','italic','oblique') as $value ) : ?><option value="<?php echo esc_attr($value); ?>" <?php selected($font['style'] ?? 'normal',$value); ?>><?php echo esc_html(ucfirst($value)); ?></option><?php endforeach; ?></select></label><label><span>font-display</span><select name="<?php echo esc_attr( $name ); ?>[display]"><?php foreach ( array('swap','optional','fallback','block','auto') as $value ) : ?><option value="<?php echo esc_attr($value); ?>" <?php selected($font['display'] ?? 'swap',$value); ?>><?php echo esc_html($value); ?></option><?php endforeach; ?></select></label></div><button type="button" class="sml-icon-button sml-remove-font-source" aria-label="Remove"><span class="dashicons dashicons-trash"></span></button></div><?php
+		<div class="sml-font-source-row" data-font-type="<?php echo esc_attr( $type ); ?>"><div class="sml-font-source-main"><label><span><?php esc_html_e( 'Family', 'smart-multilingual' ); ?></span><input type="text" name="<?php echo esc_attr( $name ); ?>[family]" value="<?php echo esc_attr( $font['family'] ?? '' ); ?>" placeholder="Peyda"></label><label><span><?php esc_html_e( 'Source', 'smart-multilingual' ); ?></span><select class="sml-font-source-type" name="<?php echo esc_attr( $name ); ?>[type]"><option value="existing" <?php selected( $type, 'existing' ); ?>><?php echo esc_html( self::ui_text( 'Elementor / existing' ) ); ?></option><option value="variable" <?php selected( $type, 'variable' ); ?>><?php echo esc_html( self::ui_text( 'Variable font' ) ); ?></option><option value="static" <?php selected( $type, 'static' ); ?>><?php echo esc_html( self::ui_text( 'Static weight' ) ); ?></option></select></label><label class="sml-font-weight-min"><span><?php esc_html_e( 'Min / weight', 'smart-multilingual' ); ?></span><input type="number" min="1" max="1000" name="<?php echo esc_attr( $name ); ?>[weight_min]" value="<?php echo esc_attr( $font['weight_min'] ?? 400 ); ?>"></label><label class="sml-font-weight-max"><span><?php esc_html_e( 'Max weight', 'smart-multilingual' ); ?></span><input type="number" min="1" max="1000" name="<?php echo esc_attr( $name ); ?>[weight_max]" value="<?php echo esc_attr( $font['weight_max'] ?? 900 ); ?>"></label></div><div class="sml-font-file-fields"><label class="sml-font-url-wrap"><span><?php echo esc_html( self::ui_text( 'Font file URL', __( 'Font file URL', 'smart-multilingual' ) ) ); ?></span><span class="sml-input-action"><input class="sml-font-url" type="url" name="<?php echo esc_attr( $name ); ?>[url]" value="<?php echo esc_url( $font['url'] ?? '' ); ?>"><button type="button" class="button sml-font-upload"><?php esc_html_e( 'Choose file', 'smart-multilingual' ); ?></button></span></label><label><span><?php esc_html_e( 'Style', 'smart-multilingual' ); ?></span><select name="<?php echo esc_attr( $name ); ?>[style]"><?php foreach ( array('normal','italic','oblique') as $value ) : ?><option value="<?php echo esc_attr($value); ?>" <?php selected($font['style'] ?? 'normal',$value); ?>><?php echo esc_html(ucfirst($value)); ?></option><?php endforeach; ?></select></label><label><span>font-display</span><select name="<?php echo esc_attr( $name ); ?>[display]"><?php foreach ( array('swap','optional','fallback','block','auto') as $value ) : ?><option value="<?php echo esc_attr($value); ?>" <?php selected($font['display'] ?? 'swap',$value); ?>><?php echo esc_html($value); ?></option><?php endforeach; ?></select></label></div><button type="button" class="sml-icon-button sml-remove-font-source" aria-label="Remove"><span class="dashicons dashicons-trash"></span></button></div><?php
 	}
 
 	private function render_typography_rule( $code, $target, $cfg, $rule ) {
@@ -451,12 +583,12 @@ final class SML_Admin {
 		<label><span><?php esc_html_e('Font family','smart-multilingual'); ?></span><input type="text" list="sml-font-families-<?php echo esc_attr($code); ?>" name="<?php echo esc_attr($name); ?>[family]" value="<?php echo esc_attr($rule['family'] ?? ''); ?>" placeholder="inherit"></label><label><span><?php esc_html_e('Fallback','smart-multilingual'); ?></span><select name="<?php echo esc_attr($name); ?>[fallback]"><?php foreach(array('sans-serif','serif','system-ui','monospace','cursive') as $value): ?><option value="<?php echo esc_attr($value); ?>" <?php selected($rule['fallback'] ?? 'sans-serif',$value); ?>><?php echo esc_html($value); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e('Weight','smart-multilingual'); ?></span><input type="number" min="1" max="1000" name="<?php echo esc_attr($name); ?>[weight]" value="<?php echo esc_attr($rule['weight'] ?? ''); ?>" placeholder="inherit"></label>
 		<label><span><?php esc_html_e('Desktop size','smart-multilingual'); ?></span><input type="text" name="<?php echo esc_attr($name); ?>[size_desktop]" value="<?php echo esc_attr($rule['size_desktop'] ?? ''); ?>" placeholder="2rem"></label><label><span><?php esc_html_e('Tablet size','smart-multilingual'); ?></span><input type="text" name="<?php echo esc_attr($name); ?>[size_tablet]" value="<?php echo esc_attr($rule['size_tablet'] ?? ''); ?>" placeholder="1.8rem"></label><label><span><?php esc_html_e('Mobile size','smart-multilingual'); ?></span><input type="text" name="<?php echo esc_attr($name); ?>[size_mobile]" value="<?php echo esc_attr($rule['size_mobile'] ?? ''); ?>" placeholder="1.5rem"></label>
 		<label><span><?php esc_html_e('Line height','smart-multilingual'); ?></span><input type="text" name="<?php echo esc_attr($name); ?>[line_height]" value="<?php echo esc_attr($rule['line_height'] ?? ''); ?>" placeholder="1.7"></label><label><span><?php esc_html_e('Letter spacing','smart-multilingual'); ?></span><input type="text" name="<?php echo esc_attr($name); ?>[letter_spacing]" value="<?php echo esc_attr($rule['letter_spacing'] ?? ''); ?>" placeholder="0px"></label><label><span><?php esc_html_e('Word spacing','smart-multilingual'); ?></span><input type="text" name="<?php echo esc_attr($name); ?>[word_spacing]" value="<?php echo esc_attr($rule['word_spacing'] ?? ''); ?>" placeholder="0px"></label>
-		<label><span><?php esc_html_e('Style','smart-multilingual'); ?></span><select name="<?php echo esc_attr($name); ?>[style]"><?php foreach(array(''=>'Inherit','normal'=>'Normal','italic'=>'Italic','oblique'=>'Oblique') as $value=>$label): ?><option value="<?php echo esc_attr($value); ?>" <?php selected($rule['style'] ?? '',$value); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e('Transform','smart-multilingual'); ?></span><select name="<?php echo esc_attr($name); ?>[transform]"><?php foreach(array(''=>'Inherit','none'=>'None','uppercase'=>'Uppercase','lowercase'=>'Lowercase','capitalize'=>'Capitalize') as $value=>$label): ?><option value="<?php echo esc_attr($value); ?>" <?php selected($rule['transform'] ?? '',$value); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e('Decoration','smart-multilingual'); ?></span><select name="<?php echo esc_attr($name); ?>[decoration]"><?php foreach(array(''=>'Inherit','none'=>'None','underline'=>'Underline','line-through'=>'Line through','overline'=>'Overline') as $value=>$label): ?><option value="<?php echo esc_attr($value); ?>" <?php selected($rule['decoration'] ?? '',$value); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?></select></label></div></details><?php
+		<label><span><?php esc_html_e('Style','smart-multilingual'); ?></span><select name="<?php echo esc_attr($name); ?>[style]"><?php foreach(array(''=>'Inherit','normal'=>'Normal','italic'=>'Italic','oblique'=>'Oblique') as $value=>$label): ?><option value="<?php echo esc_attr($value); ?>" <?php selected($rule['style'] ?? '',$value); ?>><?php echo esc_html( self::ui_text( $label ) ); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e('Transform','smart-multilingual'); ?></span><select name="<?php echo esc_attr($name); ?>[transform]"><?php foreach(array(''=>'Inherit','none'=>'None','uppercase'=>'Uppercase','lowercase'=>'Lowercase','capitalize'=>'Capitalize') as $value=>$label): ?><option value="<?php echo esc_attr($value); ?>" <?php selected($rule['transform'] ?? '',$value); ?>><?php echo esc_html( self::ui_text( $label ) ); ?></option><?php endforeach; ?></select></label><label><span><?php esc_html_e('Decoration','smart-multilingual'); ?></span><select name="<?php echo esc_attr($name); ?>[decoration]"><?php foreach(array(''=>'Inherit','none'=>'None','underline'=>'Underline','line-through'=>'Line through','overline'=>'Overline') as $value=>$label): ?><option value="<?php echo esc_attr($value); ?>" <?php selected($rule['decoration'] ?? '',$value); ?>><?php echo esc_html( self::ui_text( $label ) ); ?></option><?php endforeach; ?></select></label></div></details><?php
 	}
 
 	private function render_switcher_colors( $settings ) {
 		$key = SML_Plugin::OPTION_KEY; $colors = array('switcher_text_color'=>'Text','switcher_bg_color'=>'Background','switcher_hover_text_color'=>'Hover text','switcher_hover_bg_color'=>'Hover background','switcher_menu_text_color'=>'Dropdown text','switcher_menu_bg_color'=>'Dropdown background','switcher_border_color'=>'Border'); ?>
-		<h3 class="sml-subheading"><?php esc_html_e('Visual style','smart-multilingual'); ?></h3><div class="sml-color-grid"><?php foreach($colors as $setting=>$label): ?><label><span><?php echo esc_html($label); ?></span><span class="sml-color-control"><input type="text" class="sml-color-text" name="<?php echo esc_attr($key); ?>[<?php echo esc_attr($setting); ?>]" value="<?php echo esc_attr($settings[$setting]); ?>" data-default-color="<?php echo esc_attr($settings[$setting]); ?>"></span></label><?php endforeach; ?><label><span><?php esc_html_e('Border radius','smart-multilingual'); ?></span><input type="number" min="0" max="40" name="<?php echo esc_attr($key); ?>[switcher_radius]" value="<?php echo esc_attr($settings['switcher_radius']); ?>"></label></div><?php
+		<h3 class="sml-subheading"><?php esc_html_e('Visual style','smart-multilingual'); ?></h3><div class="sml-color-grid"><?php foreach($colors as $setting=>$label): ?><label><span><?php echo esc_html( self::ui_text( $label ) ); ?></span><span class="sml-color-control"><input type="text" class="sml-color-text" name="<?php echo esc_attr($key); ?>[<?php echo esc_attr($setting); ?>]" value="<?php echo esc_attr($settings[$setting]); ?>" data-default-color="<?php echo esc_attr($settings[$setting]); ?>"></span></label><?php endforeach; ?><label><span><?php esc_html_e('Border radius','smart-multilingual'); ?></span><input type="number" min="0" max="40" name="<?php echo esc_attr($key); ?>[switcher_radius]" value="<?php echo esc_attr($settings['switcher_radius']); ?>"></label></div><?php
 	}
 
 	public function admin_notices() {
@@ -478,11 +610,6 @@ final class SML_Admin {
 		$translations = get_option( 'sml_attribute_labels', array() );
 		$default      = SML_Languages::default_code();
 		$targets      = array_values( array_diff( SML_Languages::enabled(), array( $default ) ) );
-		// 0.9.x stored Persian labels as a flat array. Interpret it without
-		// rewriting the option until the administrator saves this screen.
-		if ( $translations && ! isset( $translations['fa'] ) && ! array_filter( array_keys( $translations ), array( 'SML_Languages', 'is_enabled' ) ) ) {
-			$translations = array( 'fa' => $translations );
-		}
 		?>
 		<div class="wrap sml-admin-wrap">
 			<h1><?php esc_html_e( 'WooCommerce Attribute Translation', 'smart-multilingual' ); ?></h1>
@@ -546,8 +673,6 @@ final class SML_Admin {
 		$key = 0 === strpos( (string) $name, 'pa_' ) ? substr( (string) $name, 3 ) : (string) $name;
 		$key = sanitize_key( $key );
 		$translations = get_option( 'sml_attribute_labels', array() );
-		// Flat options are accepted for non-destructive 0.9.x migration.
-		if ( 'fa' === $language && ! isset( $translations['fa'] ) && ! empty( $translations[ $key ] ) ) return $translations[ $key ];
 		return ! empty( $translations[ $language ][ $key ] ) ? $translations[ $language ][ $key ] : $label;
 	}
 
@@ -653,7 +778,6 @@ final class SML_Admin {
 		}
 		$settings = SML_Plugin::settings();
 		$settings['language_menus'][$target] = (int) $new_menu_id;
-		if ( 'fa' === $target ) $settings['persian_menu'] = (int) $new_menu_id;
 		update_option( SML_Plugin::OPTION_KEY, $settings );
 		wp_safe_redirect( admin_url( 'nav-menus.php?action=edit&menu=' . (int) $new_menu_id ) );
 		exit;

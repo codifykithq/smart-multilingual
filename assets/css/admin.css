@@ -595,3 +595,126 @@ body[class*="_page_smart-multilingual"] #wpcontent {
 		border-radius: 17px;
 	}
 }
+
+
+/* 1.0.14: RTL-safe WordPress admin layout.
+ * The settings shell previously used physical left/right padding and a content-box
+ * max-width, which made the page wider than #wpcontent on RTL dashboards and pushed
+ * controls underneath the right-side admin menu. */
+.sml-settings-shell,
+.sml-admin-wrap {
+	box-sizing: border-box;
+}
+.sml-settings-shell {
+	width: auto;
+	max-width: 1380px;
+	padding: 20px 18px 90px;
+	overflow-x: clip;
+}
+.sml-settings-shell::before {
+	inset: 32px 0 0 0;
+}
+.sml-settings-shell .sml-settings-hero,
+.sml-settings-shell .sml-settings-tabs,
+.sml-settings-shell .sml-card,
+.sml-settings-shell .sml-save-bar {
+	box-sizing: border-box;
+	max-width: 100%;
+}
+.sml-settings-shell .sml-card::before {
+	inset: 0 auto 0 0;
+}
+body.rtl .sml-settings-shell .sml-card::before {
+	left: auto;
+	right: 0;
+}
+body.rtl .sml-settings-shell .sml-icon-button {
+	right: auto;
+	left: 12px;
+}
+body.rtl .sml-settings-shell .sml-font-source-row {
+	padding: 17px 17px 17px 52px;
+}
+body.rtl .sml-settings-shell .sml-settings-hero,
+body.rtl .sml-settings-shell .sml-card-heading,
+body.rtl .sml-settings-shell .sml-type-section-head,
+body.rtl .sml-settings-shell .sml-toggle-row,
+body.rtl .sml-settings-shell .sml-language-tile {
+	direction: rtl;
+}
+body.rtl .sml-settings-shell select,
+body.rtl .sml-settings-shell input[type="text"],
+body.rtl .sml-settings-shell input[type="url"],
+body.rtl .sml-settings-shell input[type="number"] {
+	text-align: right;
+}
+@media (max-width: 782px) {
+	.sml-settings-shell { padding: 14px 10px 80px; }
+}
+\n\n/* 1.0.16: source-language direction for the plugin settings page only.\n * WordPress admin keeps its own user locale/direction; only this settings shell\n * previews the selected website source language direction. */\n.sml-settings-shell.sml-settings-dir-rtl {\n\tdirection: rtl;\n\ttext-align: right;\n}\n.sml-settings-shell.sml-settings-dir-ltr {\n\tdirection: ltr;\n\ttext-align: left;\n}\n.sml-settings-shell.sml-settings-dir-rtl .sml-card::before {\n\tleft: auto;\n\tright: 0;\n}\n.sml-settings-shell.sml-settings-dir-ltr .sml-card::before {\n\tleft: 0;\n\tright: auto;\n}\n.sml-settings-shell.sml-settings-dir-rtl .sml-icon-button {\n\tright: auto;\n\tleft: 12px;\n}\n.sml-settings-shell.sml-settings-dir-rtl .sml-font-source-row {\n\tpadding: 17px 17px 17px 52px;\n}\n.sml-settings-shell.sml-settings-dir-ltr .sml-font-source-row {\n\tpadding: 17px 52px 17px 17px;\n}\n.sml-settings-shell.sml-settings-dir-rtl select,\n.sml-settings-shell.sml-settings-dir-rtl input[type=\"text\"],\n.sml-settings-shell.sml-settings-dir-rtl input[type=\"url\"],\n.sml-settings-shell.sml-settings-dir-rtl input[type=\"number\"] {\n\tdirection: rtl;\n\ttext-align: right;\n}\n.sml-settings-shell.sml-settings-dir-ltr select,\n.sml-settings-shell.sml-settings-dir-ltr input[type=\"text\"],\n.sml-settings-shell.sml-settings-dir-ltr input[type=\"url\"],\n.sml-settings-shell.sml-settings-dir-ltr input[type=\"number\"] {\n\tdirection: ltr;\n\ttext-align: left;\n}\n.sml-settings-shell.sml-settings-dir-rtl .sml-settings-hero,\n.sml-settings-shell.sml-settings-dir-rtl .sml-card-heading,\n.sml-settings-shell.sml-settings-dir-rtl .sml-type-section-head,\n.sml-settings-shell.sml-settings-dir-rtl .sml-toggle-row,\n.sml-settings-shell.sml-settings-dir-rtl .sml-language-tile,\n.sml-settings-shell.sml-settings-dir-rtl .sml-save-bar {\n\tdirection: rtl;\n\ttext-align: right;\n}\n.sml-settings-shell.sml-settings-dir-ltr .sml-settings-hero,\n.sml-settings-shell.sml-settings-dir-ltr .sml-card-heading,\n.sml-settings-shell.sml-settings-dir-ltr .sml-type-section-head,\n.sml-settings-shell.sml-settings-dir-ltr .sml-toggle-row,\n.sml-settings-shell.sml-settings-dir-ltr .sml-language-tile,\n.sml-settings-shell.sml-settings-dir-ltr .sml-save-bar {\n\tdirection: ltr;\n\ttext-align: left;\n}\n
+
+/* 1.0.21: robust toggle geometry. Keep the knob inside its own track in both
+   LTR and RTL admin layouts, regardless of inherited flex/label styles. */
+.sml-switch {
+	position: relative;
+	display: inline-flex;
+	flex: 0 0 38px;
+	width: 38px;
+	height: 22px;
+	margin: 0;
+	padding: 0;
+	vertical-align: middle;
+}
+.sml-switch > span {
+	position: relative;
+	box-sizing: border-box;
+	width: 38px !important;
+	height: 22px !important;
+	margin: 0 !important;
+	overflow: hidden;
+}
+.sml-switch > span::after {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 16px;
+	height: 16px;
+	margin: 0 !important;
+	transform: none;
+}
+.sml-switch input:checked + span::after {
+	transform: translateX(16px);
+}
+.sml-settings-dir-rtl .sml-switch > span::after {
+	left: auto;
+	right: 3px;
+}
+.sml-settings-dir-rtl .sml-switch input:checked + span::after {
+	transform: translateX(-16px);
+}
+
+/* When WordPress itself reports an RTL admin locale, keep the plugin page from
+   overriding core dashboard direction. */
+body.rtl #wpcontent,
+body.rtl #wpbody,
+body.rtl #wpbody-content {
+	direction: rtl;
+}
+
+/* 1.0.26: RTL/admin typography hardening */
+.sml-admin-wrap,
+.sml-settings-shell {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.sml-admin-wrap :is(h1,h2,h3,h4,h5,h6,.button,button,input,select,textarea,label,code),
+.sml-settings-shell :is(h1,h2,h3,h4,h5,h6,.button,button,input,select,textarea,label,code) {
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.sml-settings-shell h1,
+.sml-settings-shell h2,
+.sml-settings-shell h3,
+.sml-admin-wrap h1,
+.sml-admin-wrap h2,
+.sml-admin-wrap h3 {
+	font-weight: 780;
+}

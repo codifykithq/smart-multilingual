@@ -44,7 +44,7 @@ final class SML_Elementor_Switcher_Widget extends \Elementor\Widget_Base {
 			)
 		);
 
-		$this->add_control( 'layout', array( 'label' => esc_html__( 'Layout', 'smart-multilingual' ), 'type' => \Elementor\Controls_Manager::SELECT, 'default' => 'dropdown', 'options' => array( 'dropdown' => 'Dropdown', 'list' => 'Inline list' ) ) );
+		$this->add_control( 'layout', array( 'label' => esc_html__( 'Layout', 'smart-multilingual' ), 'type' => \Elementor\Controls_Manager::SELECT, 'default' => 'dropdown', 'options' => array( 'dropdown' => esc_html__( 'Dropdown', 'smart-multilingual' ), 'list' => esc_html__( 'Inline list', 'smart-multilingual' ) ) ) );
 		$this->end_controls_section();
 	}
 

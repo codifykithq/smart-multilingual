@@ -14,6 +14,18 @@ jQuery(function ($) {
 		let tab = 'general';
 		try { tab = window.localStorage.getItem('sml-settings-tab') || tab; } catch (error) {}
 		selectSettingsTab(tab);
+
+		function applySourceDirection() {
+			const $shell = $('.sml-settings-shell');
+			const $select = $shell.find('select[name$="[default_language]"]');
+			if (!$select.length) return;
+			const dir = $select.find('option:selected').data('dir') === 'rtl' ? 'rtl' : 'ltr';
+			$shell.removeClass('sml-settings-dir-rtl sml-settings-dir-ltr')
+				.addClass('sml-settings-dir-' + dir)
+				.attr('dir', dir);
+		}
+		applySourceDirection();
+		$(document).on('change', '.sml-settings-shell select[name$="[default_language]"]', applySourceDirection);
 	}
 
 	$(document).on('click', '[data-sml-type-language]', function () {

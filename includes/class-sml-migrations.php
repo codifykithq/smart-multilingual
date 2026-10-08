@@ -24,11 +24,21 @@ final class SML_Migrations {
 			} else {
 				update_option( SML_Languages::OPTION_KEY, $registry, false );
 			}
+		} else {
+			// Preserve every existing language exactly; updates never inject a language.
+			$registry = $saved_registry;
 		}
 
 		$settings = wp_parse_args( (array) get_option( SML_Plugin::OPTION_KEY, array() ), SML_Plugin::defaults() );
 		$default  = SML_Languages::default_code();
 		$settings['default_language'] = $default;
+
+		/* Keep enabled/switcher lists in sync with a repaired baseline registry. */
+		$registry_codes = array_keys( SML_Languages::registry() );
+		if ( $had_settings ) {
+			$settings['enabled_languages'] = array_values( array_unique( array_merge( (array) ( $settings['enabled_languages'] ?? array() ), $registry_codes ) ) );
+			$settings['switcher_languages'] = array_values( array_unique( array_merge( (array) ( $settings['switcher_languages'] ?? array() ), $registry_codes ) ) );
+		}
 
 		if ( ! $had_settings ) {
 			$settings['enabled_languages']  = array_keys( SML_Languages::initial_registry() );

@@ -36,11 +36,6 @@ final class SML_Compatibility {
 				'description' => __( 'Selects a translated HFE/UAE header or footer template for the current language.', 'smart-multilingual' ),
 				'color'       => 'green',
 			),
-			'persian_dates' => array(
-				'label'       => __( 'Persian date integration', 'smart-multilingual' ),
-				'description' => __( 'Uses Parsi Date output on Persian pages when the dependency is available.', 'smart-multilingual' ),
-				'color'       => 'green',
-			),
 			'legacy_093_layout' => array(
 				'label'       => __( 'Legacy 0.9.x compatibility bundle', 'smart-multilingual' ),
 				'description' => __( 'Preserves historical layout fixes on upgraded installations. Do not enable it on a new site.', 'smart-multilingual' ),
@@ -55,7 +50,11 @@ final class SML_Compatibility {
 		 * translated profile labels, which can invoke gettext while gettext itself
 		 * is being registered. Direct option access is re-entry safe.
 		 */
-		$settings = (array) get_option( SML_Plugin::OPTION_KEY, array() );
+		$settings = get_option( SML_Plugin::OPTION_KEY, array() );
+		if ( ! is_array( $settings ) || empty( $settings['compatibility_profiles'] ) || ! is_array( $settings['compatibility_profiles'] ) ) {
+			return false;
+		}
+
 		return ! empty( $settings['compatibility_profiles'][ sanitize_key( $profile ) ] );
 	}
 
